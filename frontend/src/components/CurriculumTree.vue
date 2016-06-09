@@ -1,12 +1,20 @@
 <template>
     <div>
-        <h1>Tree</h1>
+        <div>Chapter</div>
         <ul class="curriculum-tree">
             <li v-for="chapter in chapters">
-                <a id="{{ chapter.id }}"
-                    href="#{{ chapter.id }}"
-                    @click="setActiveChapter(chapter)"
-                    >{{ chapter.title }}</a>
+                <div>
+                    <a id="{{ chapter.id }}"
+                        href="#{{ chapter.id }}"
+                        @click="setActiveChapter(chapter)">{{ chapter.title }}</a>
+                    <button @click="addLesson(chapter)">+</button>
+                </div>
+                <ul v-if="activeChapter && chapter == activeChapter">
+                    Lessons
+                    <li v-for="lesson in chapter.lessons">
+                        Lesson {{ lesson.id }}
+                    </li>
+                </ul>
             </li>
         </ul>
         <button @click="refreshChapters">Refresh</button>
@@ -43,7 +51,7 @@ export default {
             this.$dispatch('add-chapter')
         },
         addLesson(chapter) {
-            chapter.lessons.push({ title: 'Click to edit', steps: [] })
+            this.$dispatch('add-lesson', chapter)
         },
         setActiveChapter(chapter) {
             console.log('set active chapter')

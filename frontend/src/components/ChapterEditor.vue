@@ -27,9 +27,7 @@ export default {
             this.$dispatch('save', chapter)
         }
     },
-    props: ['chapter'],
-    ready: function () {
-    }
+    props: ['chapter']
 }
 </script>
 

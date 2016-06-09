@@ -1,7 +1,7 @@
 <template>
     <div class="markedit">
         <div
-            id="markedit-editor"
+            id="markedit-editor-{{ instanceId }}"
             class="markedit-editor"></div>
         <div
             class="markedit-viewer"
@@ -27,19 +27,22 @@ export default {
         // }
         content: {
             get() {
-                this.isSilentUpdate = true
-                this.editor ? this.editor
-                    .getSession()
-                    .getDocument()
-                    .setValue(this.contentValue || '') : null
-                this.isSilentUpdate = false
+                if (!this.isSilentUpdate) {
+                    this.isSilentUpdate = true
+                    this.editor ? this.editor
+                        .getSession()
+                        .getDocument()
+                        .setValue(this.contentValue || '') : null
+                    this.isSilentUpdate = false
+                }
                 return this.contentValue || '*none*'
             }
         }
     },
     data: function () {
         return {
-            isSilentUpdate: false
+            isSilentUpdate: false,
+            instanceId: Math.floor(Math.random() * 100000000)
         }
     },
     filters: {
@@ -53,11 +56,15 @@ export default {
     //props: [ 'contentValue' ],
     props: [ 'contentValue' ],
     ready() {
-        this.editor = ace.edit('markedit-editor')
+        this.editor = ace.edit('markedit-editor-' + this.instanceId)
         this.editor.getSession().setMode('ace/mode/markdown')
         this.editor.setValue(this.contentValue || '')
         this.editor.on('change', change => {
-            if (!this.isSilentUpdate) this.contentValue = this.editor.getValue()
+            if (!this.isSilentUpdate) {
+                this.isSilentUpdate = true
+                this.contentValue = this.editor.getValue()
+                this.isSilentUpdate = false
+            }
         })
     }
 }
@@ -67,12 +74,16 @@ export default {
 <style>
 .markedit {
     display: flex;
-    flex: 1 1 auto;
+    flex: 1 1 0%;
     height: 100%;
 }
 
 .markedit-editor, .markedit-viewer {
     flex: 0 0 auto;
     width: 50%;
+}
+
+.markedit-viewer {
+    overflow-y: auto;
 }
 </style>

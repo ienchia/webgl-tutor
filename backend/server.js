@@ -8,6 +8,7 @@ const session = require('koa-session')
 const static = require('koa-static')
 
 const auth = require('./middleware/authentication')
+const restUtil = require('./lib/rest-util')
 const fileUtil = require('./lib/file-util.js')
 
 const chapters = require('./chapters.js')
@@ -36,21 +37,21 @@ app.use(route.get(
     '/chapters',
     chapters.list
 ))
-app.use(route.get(
-    '/chapters/:id',
-    chapters.show
-))
 app.use(route.options(
     '/chapters',
-    chapters.options
-))
-app.use(route.options(
-    '/chapters/:id',
     chapters.options
 ))
 app.use(route.post(
     '/chapters',
     chapters.create
+))
+app.use(route.get(
+    '/chapters/:id',
+    chapters.show
+))
+app.use(route.options(
+    '/chapters/:id',
+    chapters.options
 ))
 app.use(route.put(
     '/chapters/:id',
@@ -60,6 +61,14 @@ app.use(route.get(
     '/chapters/:id/lessons',
     chapters.listLessons
 ))
+app.use(route.options(
+    '/chapters/:id/lessons',
+    chapters.options
+))
+app.use(route.post(
+    '/chapters/:id/lessons',
+    chapters.createLesson
+))
 /**
  *  Lessons
  **/
@@ -67,6 +76,50 @@ app.use(route.get(
 app.use(route.get(
     '/lessons',
     lessons.list
+))
+app.use(route.options(
+    '/lessons',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['GET'])
+    }
+))
+app.use(route.delete(
+    '/lessons/:id',
+    lessons.delete
+))
+app.use(route.get(
+    '/lessons/:id',
+    lessons.show
+))
+app.use(route.put(
+    '/lessons/:id',
+    lessons.update
+))
+app.use(route.options(
+    '/lessons/:id',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['GET', 'PUT', 'DELETE'])
+    }
+))
+app.use(route.get(
+    '/lessons/:id/steps',
+    lessons.listSteps
+))
+app.use(route.post(
+    '/lessons/:id/steps',
+    lessons.createStep
+))
+app.use(route.options(
+    '/lessons/:id/steps',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['GET', 'POST'])
+    }
 ))
 /**
  *  Logins
