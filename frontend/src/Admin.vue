@@ -5,48 +5,54 @@
             <curriculum-editor
                 :chapters="chapters"
                 :active-chapter="selectedChapter"
-                :lessons="selectedChapterLessons"
                 :active-lesson="selectedLesson"
+                :active-step="selectedStep"
                 @add-chapter="addChapter"
                 @add-lesson="addLessonToChapter"
                 @add-step="addStepToLesson"
                 @refresh-chapters="refreshChapters"
                 @set-active-chapter="selectChapter"
-                @set-active-lesson="selectLesson"></curriculum-editor>
+                @set-active-lesson="selectLesson"
+                @set-active-step="selectStep"></curriculum-editor>
             <!-- DEBUG -->
             <div>
                 <pre style="font-size: 8px">
                     <br />{{ selectedChapter | json }}
-                    <br />{{ selectedChapterLessons | json }}
+                    <br />{{ selectedStep | json }}
                 </pre>
                 <button type="button" @click="test">Test</button>
             </div>
         </aside>
         <main class="content rows">
-            <div class="cols" v-if="selectedChapter || selectedLesson">
-                <div class="col"
-                    v-if="selectedChapter">
-                    <chapter-editor
-                        :chapter="selectedChapter"
-                        @save="updateChapter">
-                    </chapter-editor>
-                </div>
-                <div class="col"
-                    v-if="selectedLesson">
-                    <lesson-editor
-                        :lesson="selectedLesson"
-                        @save-lesson="updateLesson">
-                    </lesson-editor>
-                </div>
-            </div>
-            <div class="cols">
-                <div class="" style="background-color: whitesmoke; height: 100%">
-
-                </div>
-            </div>
+            <tab-set active-index="0">
+                <tab header="Descriptions">
+                    <div class="cols" v-if="selectedChapter || selectedLesson">
+                        <div class="col"
+                            v-if="selectedChapter">
+                            <chapter-editor
+                                :chapter="selectedChapter"
+                                @save="updateChapter">
+                            </chapter-editor>
+                        </div>
+                        <div class="col"
+                            v-if="selectedLesson">
+                            <lesson-editor
+                                :lesson="selectedLesson"
+                                @save-lesson="updateLesson">
+                            </lesson-editor>
+                        </div>
+                    </div>
+                    <div class="cols" v-if="selectedStep">
+                        <step-editor
+                            :step="selectedStep"
+                            @save-step="updateStep">
+                        </step-editor>
+                    </div>
+                </tab>
+                <tab header="Sources"></tab>
+            </tab-set>
         </main>
         <aside class="secondary-sidebar">
-            {{ chapter.description }}
         </aside>
     </div>
     <footer class="main-footer">This is a footer</footer>
@@ -62,6 +68,9 @@ import ChapterEditor from './components/ChapterEditor.vue'
 import CurriculumEditor from './components/CurriculumEditor.vue'
 import LessonEditor from './components/LessonEditor.vue'
 import MarkdownEditor from './components/MarkdownEditor.vue'
+import StepEditor from './components/StepEditor.vue'
+import Tab from './components/Tab.vue'
+import TabSet from './components/TabSet.vue'
 import UserGrid from './components/UserGrid.vue'
 
 export default {
@@ -70,6 +79,9 @@ export default {
         CurriculumEditor,
         LessonEditor,
         MarkdownEditor,
+        StepEditor,
+        Tab,
+        TabSet,
         UserGrid
     },
     data: function () {
@@ -79,7 +91,8 @@ export default {
             chapters: null,
             selectedChapter: null,
             selectedChapterLessons: null,
-            selectedLesson: null
+            selectedLesson: null,
+            selectedStep: null
         }
     },
     methods: {
@@ -160,18 +173,33 @@ export default {
             })
         },
         selectChapter(chapter) {
-            this.selectedChapter = chapter
-            this.retrieveLessons(chapter)
+            this.selectedChapter = null
+            this.selectedLesson = null
+            this.selectedStep = null
+            this.$nextTick(() => {
+                this.selectedChapter = chapter
+                this.retrieveLessons(chapter)
+            })
         },
         selectLesson(lesson) {
-            this.selectedLesson = lesson
-            this.refreshLessonSteps(lesson)
+            this.selectedLesson = null
+            this.selectedStep = null
+            this.$nextTick(() => {
+                this.selectedLesson = lesson
+                this.refreshLessonSteps(lesson)
+            })
+        },
+        selectStep(step) {
+            this.selectedStep = null
+            this.$nextTick(() => {
+                this.selectedStep = step
+            })
         },
         updateChapter(chapter) {
             request
                 .put(`http://${process.env.API_URL}/chapters/${chapter.id}`)
                 .send(chapter)
-                .end(function (err, res) {
+                .end((err, res) => {
                      if (err || !res.ok) {
                          console.log(err)
                      }
@@ -187,7 +215,16 @@ export default {
             .send(lesson)
             .end((err, res) => {
                 if (!err && res.ok) {
-                    console.log(res.body)
+                    this.selectedLesson = null
+                }
+            })
+        },
+        updateStep(step) {
+            request.put(`http://${process.env.API_URL}/steps/${step.id}`)
+            .send(step)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.selectedStep = null
                 }
             })
         }
@@ -238,8 +275,8 @@ export default {
     flex: 0 0 auto;
     padding: 1em 1em 0.5em;
     color: white;
-    background-color: #3169f5;
-    border-bottom: 2px solid #4E81FF;
+    background-color: royalblue;
+    border-bottom: 2px solid rgba(255, 255, 255, .5);
 }
 
 .main-footer {

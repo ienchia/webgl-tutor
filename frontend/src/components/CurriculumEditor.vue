@@ -2,10 +2,10 @@
     <div>
         <div>Chapter</div>
         <ul class="tree">
-            <li v-for="chapter in chapters" :class="{ isActive: activeChapter == chapter }">
-                <div>
-                    <a id="chapter-{{ chapter.id }}"
-                        href="#chapter-{{ chapter.id }}"
+            <li v-for="chapter in chapters" :class="{ 'is-active': activeChapter == chapter }">
+                <div class="tree-header">
+                    <a class="expand-tree"
+                        :class="{ 'is-active': activeChapter == chapter }"
                         @click="setActiveChapter(chapter)">
                         {{ chapter.title }}
                     </a>
@@ -13,9 +13,9 @@
                 </div>
                 <ul v-if="activeChapter == chapter">
                     <li v-for="lesson in chapter.lessons">
-                        <div class="">
-                            <a id="lesson-{{ lesson.id }}"
-                                href="#lesson-{{ lesson.id }}"
+                        <div class="tree-header">
+                            <a class="expand-tree"
+                                :class="{ 'is-active': activeLesson == lesson }"
                                 @click="setActiveLesson(lesson)">
                                 {{ lesson.title }}
                             </a>
@@ -23,7 +23,11 @@
                         </div>
                         <ul v-if="activeLesson == lesson">
                             <li v-for="step in lesson.steps">
-                                {{ step.title }}
+                                <a class="expand-tree"
+                                    :class="{ 'is-active': activeStep == step }"
+                                    @click="setActiveStep(step)">
+                                    {{ step.title }}
+                                </a>
                             </li>
                         </ul>
                     </li>
@@ -43,9 +47,7 @@ export default {
         MarkdownEditor
     },
     data: function () {
-        return {
-            activeLesson: null,
-        }
+        return { }
     },
     computed: {
         save() {
@@ -64,23 +66,34 @@ export default {
         addStep(lesson) {
             this.$dispatch('add-step', lesson)
         },
-        setActiveChapter(chapter) {
-            this.$dispatch('set-active-chapter', chapter)
-        },
         refreshChapters() {
             this.$dispatch('refresh-chapters')
         },
+        setActiveChapter(chapter) {
+            this.$dispatch('set-active-chapter', chapter)
+        },
         setActiveLesson(lesson) {
             this.$dispatch('set-active-lesson', lesson)
+        },
+        setActiveStep(step) {
+            this.$dispatch('set-active-step', step)
         }
     },
-    props: [ 'chapters', 'activeChapter', 'activeLesson' ]
+    props: [ 'chapters', 'activeChapter', 'activeLesson', 'activeStep' ]
 }
 
 </script>
 
 <style media="screen">
-.tree > li.isActive {
+.tree > li.is-active {
     background: whitesmoke;
+}
+
+.tree .expand-tree {
+    cursor: pointer;
+}
+
+.expand-tree.is-active {
+    text-decoration: underline;
 }
 </style>

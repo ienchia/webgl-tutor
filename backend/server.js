@@ -15,6 +15,7 @@ const chapters = require('./chapters.js')
 const db = require('./sequelize')
 const login = require('./login')
 const lessons = require('./lessons')
+const steps = require('./steps')
 const users = require('./users')
 
 app = koa()
@@ -158,6 +159,21 @@ app.use(route.get(
 app.use(route.post(
     '/users',
     users.create
+))
+/**
+ * Steps
+ */
+app.use(route.put(
+    '/steps/:id',
+    steps.update
+))
+app.use(route.options(
+    '/steps/:id',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['PUT'])
+    }
 ))
 /**
  * File systems
