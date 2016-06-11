@@ -38,3 +38,6 @@ jspm_packages
 
 # Frontend build directory
 public
+
+# Development configurations
+development.sh
