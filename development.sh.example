@@ -1,3 +1,4 @@
+rm -rf public/learn
 trap 'kill %1' SIGINT
 export DATABASE_HOST=127.0.0.1
 export DATABASE_PORT=3306

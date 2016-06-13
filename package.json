@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-      "clean": "rm -rf ./sources",
+    "clean": "rm -rf ./sources",
     "dev": "webpack-dev-server --inline --hot",
-    "server": "nodemon backend/server.js",
+    "server": "nodemon --ignore 'public/*' backend/server.js",
     "start": "webpack-dev-server --inline",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

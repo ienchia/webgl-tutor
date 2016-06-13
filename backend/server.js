@@ -15,6 +15,7 @@ const chapters = require('./chapters.js')
 const db = require('./sequelize')
 const login = require('./login')
 const lessons = require('./lessons')
+const sources = require('./sources')
 const steps = require('./steps')
 const users = require('./users')
 
@@ -32,8 +33,8 @@ app.use(function* (next) {
 
 
 /**
- *  Chapters
- **/
+*  Chapters
+**/
 app.use(route.get(
     '/chapters',
     chapters.list
@@ -70,9 +71,21 @@ app.use(route.post(
     '/chapters/:id/lessons',
     chapters.createLesson
 ))
+app.use(route.post(
+    '/chapters/:chapterId/lessons/:lessonId/steps/:stepId/sources',
+    sources.create
+))
+app.use(route.options(
+    '/chapters/:chapterId/lessons/:lessonId/steps/:stepId/sources',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['GET', 'POST'])
+    }
+))
 /**
- *  Lessons
- **/
+*  Lessons
+**/
 //app.use(auth())
 app.use(route.get(
     '/lessons',
@@ -123,8 +136,8 @@ app.use(route.options(
     }
 ))
 /**
- *  Logins
- **/
+*  Logins
+**/
 app.use(route.get(
     '/login/create',
     login.create
@@ -134,8 +147,8 @@ app.use(route.get(
     login.delete
 ))
 /**
- *  Users
- **/
+*  Users
+**/
 app.use(route.options(
     '/users',
     users.options
@@ -161,8 +174,35 @@ app.use(route.post(
     users.create
 ))
 /**
- * Steps
- */
+* Sources
+*/
+app.use(route.get(
+    '/sources',
+    sources.list
+))
+app.use(route.options(
+    '/sources',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['GET'])
+    }
+))
+app.use(route.put(
+    '/sources/:id',
+    sources.update
+))
+app.use(route.options(
+    '/sources/:id',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['PUT'])
+    }
+))
+/**
+* Steps
+*/
 app.use(route.put(
     '/steps/:id',
     steps.update
@@ -175,18 +215,34 @@ app.use(route.options(
         .call(this, ['PUT'])
     }
 ))
+app.use(route.get(
+    '/steps/:id/sources',
+    steps.listSources
+))
+app.use(route.post(
+    '/steps/:id/sources',
+    steps.createSource
+))
+app.use(route.options(
+    '/steps/:id/sources',
+    function* () {
+        restUtil
+        .createOptionsResponse
+        .call(this, ['GET', 'POST'])
+    }
+))
 /**
- * File systems
- */
+* File systems
+*/
 app.use(route.get(
     '/apple/:dirname/:filename/:content',
     function* (dirname, filename, content) {
         const dirPath = path.resolve('sources', dirname)
         const isPathExist = yield fileUtil
-            .checkDir(dirPath)
-            .catch(function (reason) {
-                return false
-            })
+        .checkDir(dirPath)
+        .catch(function (reason) {
+            return false
+        })
         if (!isPathExist) {
             yield fileUtil.createDir(dirPath)
         }
@@ -197,10 +253,10 @@ app.use(route.get(
         this.body = isCreated ? 'ok' : 'not found'
     }
 ))
-app.use(mount('/sources', static('sources')))
+app.use(mount('/files', static('public/files')))
 /**
- * Error handling
- */
+* Error handling
+*/
 app.use(function* () {
     this.throw(404)
 })

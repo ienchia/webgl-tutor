@@ -49,13 +49,31 @@
                         </step-editor>
                     </div>
                 </tab>
-                <tab header="Sources"></tab>
+                <tab header="Sources" v-if="selectedStep">
+                    <div class="col">
+                        <source-list
+                            :selected-source.sync="selectedSource"
+                            :sources="selectedStep.sources"
+                            @add-source="addSourceToStep">
+                        </source-list>
+                    </div>
+                    <div class="col cols" v-if="selectedSource">
+                        <source-editor
+                            :source="selectedSource"
+                            @save-source="updateSource">
+                        </source-editor>
+                    </div>
+                </tab>
             </tab-set>
         </main>
         <aside class="secondary-sidebar">
         </aside>
     </div>
-    <footer class="main-footer">This is a footer</footer>
+    <footer class="main-footer">
+        <ul class="color-palette">
+            <li class="color-block" v-for="i in [1, 2, 3, 4, 5, 6]">&nbsp;</li>
+        </ul>
+    </footer>
 </template>
 
 <script>
@@ -68,6 +86,8 @@ import ChapterEditor from './components/ChapterEditor.vue'
 import CurriculumEditor from './components/CurriculumEditor.vue'
 import LessonEditor from './components/LessonEditor.vue'
 import MarkdownEditor from './components/MarkdownEditor.vue'
+import SourceList from './components/SourceList.vue'
+import SourceEditor from './components/SourceEditor.vue'
 import StepEditor from './components/StepEditor.vue'
 import Tab from './components/Tab.vue'
 import TabSet from './components/TabSet.vue'
@@ -79,6 +99,8 @@ export default {
         CurriculumEditor,
         LessonEditor,
         MarkdownEditor,
+        SourceList,
+        SourceEditor,
         StepEditor,
         Tab,
         TabSet,
@@ -89,10 +111,18 @@ export default {
             chapter: null,
             chapterTitle: null,
             chapters: null,
+            debug: 'hello, world',
             selectedChapter: null,
             selectedChapterLessons: null,
             selectedLesson: null,
-            selectedStep: null
+            selectedStep: null,
+            selectedSource: null,
+            sources: [
+                {name: 'index.dummy', type: 'text/html', content: '<!DOCTYPE html>'},
+                {name: 'vshader.vert', type: 'text/plain', content: 'dummy vertex shader'},
+                {name: 'fshader.frag', type: 'text/plain', content: 'dummy fragment shader'},
+                {name: 'main.js', type: 'script/javascript', content: 'alert("hello")'}
+            ]
         }
     },
     methods: {
@@ -136,6 +166,25 @@ export default {
                 }
             })
         },
+        addSourceToStep(source) {
+            const chapterId = this.selectedChapter.id
+            const lessonId = this.selectedLesson.id
+            const stepId = this.selectedStep.id
+            request
+            .post(
+                `http://${process.env.API_URL}`
+                + `/chapters/${chapterId}`
+                + `/lessons/${lessonId}`
+                + `/steps/${stepId}`
+                + `/sources`
+            )
+            .send(source)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.refreshStepSources(this.selectedStep)
+                }
+            })
+        },
         refreshChapters() {
             console.log('retrieving chapters')
             this.selectedChapter = null
@@ -144,9 +193,21 @@ export default {
             .end((err, res) => {
                 if (!err && res.ok) {
                     this.chapters
-                    = res.body.map(d => {
-                        d.lessons = null
-                        return d
+                    = res.body.map(chapter => {
+                        chapter.lessons = null
+                        return chapter
+                    })
+                }
+            })
+        },
+        refreshChapterLessons(chapter) {
+            request
+            .get(`http://${process.env.API_URL}/chapters/${chapter.id}/lessons`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    chapter.lessons = res.body.map(lesson => {
+                        lesson.steps = null
+                        return lesson
                     })
                 }
             })
@@ -156,19 +217,19 @@ export default {
             .get(`http://${process.env.API_URL}/lessons/${lesson.id}/steps`)
             .end((err, res) => {
                 if (!err && res.ok) {
-                    lesson.steps = res.body
+                    lesson.steps = res.body.map(step => {
+                        step.sources = null
+                        return step
+                    })
                 }
             })
         },
-        retrieveLessons(chapter) {
+        refreshStepSources(step) {
             request
-            .get(`http://${process.env.API_URL}/chapters/${chapter.id}/lessons`)
+            .get(`http://${process.env.API_URL}/steps/${step.id}/sources`)
             .end((err, res) => {
                 if (!err && res.ok) {
-                    chapter.lessons = res.body.map(d => {
-                        d.steps = null
-                        return d
-                    })
+                    step.sources = res.body
                 }
             })
         },
@@ -178,7 +239,7 @@ export default {
             this.selectedStep = null
             this.$nextTick(() => {
                 this.selectedChapter = chapter
-                this.retrieveLessons(chapter)
+                this.refreshChapterLessons(chapter)
             })
         },
         selectLesson(lesson) {
@@ -193,6 +254,7 @@ export default {
             this.selectedStep = null
             this.$nextTick(() => {
                 this.selectedStep = step
+                this.refreshStepSources(step)
             })
         },
         updateChapter(chapter) {
@@ -225,6 +287,18 @@ export default {
             .end((err, res) => {
                 if (!err && res.ok) {
                     this.selectedStep = null
+                }
+            })
+        },
+        updateSource(source) {
+            request
+            .put(
+                `http://${process.env.API_URL}/sources/${source.id}`
+            )
+            .send(source)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.selectedSource = null
                 }
             })
         }
@@ -295,5 +369,41 @@ export default {
 
 .content {
     flex: 1 1 auto;
+}
+
+
+
+
+.color-palette {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex: 1;
+}
+
+.color-block {
+    display: block;
+    flex: 1;
+    text-align: center;
+}
+
+.color-block:nth-child(5n+1) {
+    background: royalblue;
+}
+
+.color-block:nth-child(5n+2) {
+    background: orangered;
+}
+
+.color-block:nth-child(5n+3) {
+    background: gold;
+}
+
+.color-block:nth-child(5n+4) {
+    background: limegreen;
+}
+
+.color-block:nth-child(5n+5) {
+    background: orchid;
 }
 </style>

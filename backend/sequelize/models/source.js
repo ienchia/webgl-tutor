@@ -7,8 +7,10 @@ module.exports = function (sequelize, DataTypes) {
             primaryKey: true,
             autoIncrement: true,
         },
-        filename: DataTypes.STRING,
-        content: DataTypes.TEXT
+        content: DataTypes.TEXT,
+        location: DataTypes.TEXT,
+        name: DataTypes.STRING,
+        type: DataTypes.STRING
     })
     return Source
 }

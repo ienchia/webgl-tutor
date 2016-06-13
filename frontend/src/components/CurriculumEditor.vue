@@ -1,41 +1,42 @@
 <template>
-    <div>
-        <div>Chapter</div>
-        <ul class="tree">
-            <li v-for="chapter in chapters" :class="{ 'is-active': activeChapter == chapter }">
-                <div class="tree-header">
-                    <a class="expand-tree"
-                        :class="{ 'is-active': activeChapter == chapter }"
-                        @click="setActiveChapter(chapter)">
-                        {{ chapter.title }}
-                    </a>
-                    <button @click="addLesson(chapter)">+</button>
+    <div class="curriculum-editor">
+        <ul class="tree-list">
+            <li class="tree-item"
+                v-for="chapter in chapters"
+                :class="{ 'is-active': activeChapter == chapter }">
+                <div class="tree-header expand-tree"
+                    :class="{ 'is-active': activeChapter == chapter }"
+                    @click="setActiveChapter(chapter)">
+                    {{ chapter.title }}
                 </div>
-                <ul v-if="activeChapter == chapter">
-                    <li v-for="lesson in chapter.lessons">
-                        <div class="tree-header">
-                            <a class="expand-tree"
-                                :class="{ 'is-active': activeLesson == lesson }"
-                                @click="setActiveLesson(lesson)">
-                                {{ lesson.title }}
-                            </a>
-                            <button @click="addStep(lesson)">+</button>
+                <ul class="tree-list cols"
+                    v-if="activeChapter == chapter">
+                    <li class="tree-item"
+                        v-for="lesson in chapter.lessons">
+                        <div class="tree-header expand-tree"
+                            :class="{ 'is-active': activeLesson == lesson }"
+                            @click="setActiveLesson(lesson)">
+                            {{ lesson.title }}
                         </div>
-                        <ul v-if="activeLesson == lesson">
-                            <li v-for="step in lesson.steps">
-                                <a class="expand-tree"
+                        <ul class="tree-list cols"
+                            v-if="activeLesson == lesson">
+                            <li class="tree-item"
+                                v-for="step in lesson.steps">
+                                <div class="expand-tree"
                                     :class="{ 'is-active': activeStep == step }"
                                     @click="setActiveStep(step)">
                                     {{ step.title }}
-                                </a>
+                                </div>
                             </li>
+                            <button @click="addStep(lesson)">Add New Step</button>
                         </ul>
                     </li>
+                    <button @click="addLesson(chapter)">Add New Lesson</button>
                 </ul>
             </li>
         </ul>
-        <button @click="refreshChapters">Refresh</button>
         <button @click="addChapter">Add Chapter</button>
+        <button @click="refreshChapters">Refresh</button>
     </div>
 </template>
 
@@ -85,12 +86,39 @@ export default {
 </script>
 
 <style media="screen">
-.tree > li.is-active {
+.curriculum-editor {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.tree-list {
+    padding: 1em;
+}
+
+.tree-header {
+    padding: .5em;
+}
+
+.tree-item {
+    list-style: none;
+    margin: 0 0 .5em 0;
+}
+
+.tree-item:last-child {
+    margin-bottom: 0;
+}
+
+.tree-header:hover {
     background: whitesmoke;
 }
 
-.tree .expand-tree {
+.tree-header.is-active {
+}
+
+.expand-tree {
     cursor: pointer;
+    position: relative;
 }
 
 .expand-tree.is-active {

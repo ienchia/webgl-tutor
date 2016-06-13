@@ -6,8 +6,11 @@
 
 <script>
 export default {
+    beforeDestroy() {
+        this.$parent.tabs.splice(this.tabIndex, 1)
+    },
     created() {
-        for (var index; index < this.$parent.$children.length; index++) {
+        for (var index = 0; index < this.$parent.$children.length; index++) {
             if (this.$parent.$children[index].$el == this.$el) {
                 this.tabIndex = index
             }
@@ -16,7 +19,7 @@ export default {
     data: function () {
         return {
             tabIndex: -1,
-            toggle: true
+            toggle: false
         }
     },
     ready() {
@@ -31,6 +34,9 @@ export default {
                 header: this.header,
                 tabIndex: this.tabIndex
             })
+        }
+        if (this.$parent.activeIndex == this.tabIndex) {
+            this.toggle = true
         }
     },
     props: [ 'header' ]

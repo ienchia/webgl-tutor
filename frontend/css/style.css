@@ -448,8 +448,3 @@ button:hover {
     color: white;
     border-color: transparent;
 }
-
-ul.tree, .tree ul {
-    padding: 0px;
-    padding-left: 25px;
-}
