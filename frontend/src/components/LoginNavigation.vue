@@ -1,18 +1,21 @@
 <template>
     <nav class="login-navigation">
-        <span v-show="isLoggedIn">
-            <div class="dropdown">
-                {{ username }}
-                <ul>
-                    <li>
-                        <button v-on:click="logout">Logout</button>
-                    </li>
-                </ul>
+        <div class="dropdown login-control" v-show="isLoggedIn">
+            <div class="dropdown-header">
+                <span class="fa fa-user"></span> {{ username }}
             </div>
-        </span>
-        <span v-else>
+            <ul class="dropdown-list">
+                <li class="dropdown-item">
+                    {{ username }}
+                </li>
+                <li class="dropdown-item">
+                    <button v-on:click="logout">Logout</button>
+                </li>
+            </ul>
+        </div>
+        <div class="login-control" v-else>
             <button v-on:click="login">Login</button>
-        </span>
+        </div>
     </nav>
 </template>
 
@@ -21,65 +24,75 @@ import ramda from 'ramda'
 
 export default {
     data: function () {
-        return {
-            user: null
-        }
+        return {}
     },
     computed: {
         username() {
-            return this.user ? this.user.name : ''
+            return this.session ? this.session.username : ''
         },
         isLoggedIn() {
-            return this.user ? true : false
+            return this.session ? true : false
         }
     },
     methods: {
         login() {
-            this.user = {
-                name: 'ienchia'
-            }
+            this.$dispatch('login', { username: '', password: '' })
         },
         logout() {
-            this.user = null
+            this.$dispatch('logout')
         }
-    }
+    },
+    props: ['session']
 }
 
 </script>
 
 <style>
-@keyframes in {
-    from {
-        top: -100px;
-    }
-    to {
-        top: 0;
-    }
-}
-
-
 .login-navigation {
-    display: inline;
+    display: flex;
+    flex: 0 0 auto;
 }
 
 .dropdown {
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
     position: relative;
     z-index: 10;
 }
 
-.dropdown > ul {
-    display: none;
+.dropdown-list {
     position: absolute;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    flex: 0 0 100%;
 }
 
-.dropdown:hover > ul {
-    display: block;
-    position: absolute;
+.dropdown:hover .dropdown-list {
 }
 
-.dropdown:hover > ul > li {
-    animation: in 0.5s ease;
-    position: relative;
+.dropdown-item {
+    background: white;
+    display: flex;
+    flex: 0 0 auto;
+    overflow: hidden;
+    padding: 0;
+    max-height: 0em;
+    transition: all .3s ease;
+}
+
+.dropdown-item:hover {
+    background: whitesmoke;
+}
+
+.dropdown:hover .dropdown-item {
+    padding: .5em;
+    max-height: 4em;
+}
+
+.login-control {
+    min-height: 1.6em;
 }
 </style>

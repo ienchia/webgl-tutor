@@ -22,7 +22,6 @@ const users = require('./users')
 app = koa()
 app.keys = [ 'im secret, hush' ]
 
-
 app.use(session(app))
 app.use(parse())
 app.use(function* (next) {

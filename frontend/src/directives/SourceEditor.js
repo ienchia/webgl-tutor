@@ -33,5 +33,8 @@ export default {
         if (this.canSetValue) {
             this.editor.setValue(value || '', 1)
         }
+    },
+    unbind() {
+        this.editor.destroy()
     }
 }

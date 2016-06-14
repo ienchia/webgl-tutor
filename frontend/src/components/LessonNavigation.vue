@@ -1,17 +1,46 @@
 <template>
-    <nav style="position: relative">
-        <ul v-show="!selectedChapter">
-            <li v-show="!selectedChapter" v-for="chapter in chapters" transition="expand">
-                <a href="#" v-on:click="selectChapter(chapter)">
-                    {{ chapter.title }}
-                </a>
-            </li>
-        </ul>
-        <ul v-else transition="expand">
-            <a href="#" v-show="selectedChapter" v-on:click="selectChapter(null)">&lt;&lt;</a>
-            <li v-for="lesson in lessons">
-                <a href="#" v-on:click="startLesson(lesson)">{{ lesson.title }}</a>
-                <p v-show="lesson == selectedChapter.currentLesson">{{ lesson.description }}</p>
+    <nav class="lesson-navigation">
+        <ul class="accordion-list">
+            <li class="accordion-item"
+                :class="{ 'is-active': selectedChapter == chapter }"
+                v-for="chapter in chapters"
+                v-show="selectedChapter == chapter || !selectedStep">
+                <div class="accordion-header"
+                    :class="{ 'is-active': selectedChapter == chapter }"
+                    @click="selectChapter(chapter)">
+                    Chapter {{ $index + 1 }}: {{ chapter.title }}
+                </div>
+                <div class="accordion-content"
+                    :class="{ 'is-active': selectedChapter == chapter }"
+                    v-if="selectedChapter == chapter">
+                    <div class="chapter-description"
+                        v-if="selectedChapter == chapter && selectedLesson == null"
+                        v-html="chapter.description || '' | marked">
+                    </div>
+                    <ul class="lesson-list">
+                        <li class="lesson-item"
+                            :class="{ 'is-active': selectedLesson == lesson }"
+                            v-for="lesson in selectedChapter.lessons">
+                            <div class="lesson-header"
+                                :class="{ 'is-active': selectedLesson == lesson }"
+                                @click="selectLesson(lesson)">
+                                Lesson {{ $index }}: {{ lesson.title }}
+                            </div>
+                            <div class="lesson-content"
+                                v-if="selectedLesson == lesson && selectedStep == null">
+                                <div v-html="lesson.description || '' | marked"></div>
+                                <button @click="beginLesson(lesson)">Begin Lesson</button>
+                            </div>
+                            <div class="lesson-content"
+                                v-if="selectedLesson == lesson && selectedStep">
+                                Step {{ selectedStep.order }}:
+                                <div class="step-content">
+                                    {{ selectedStep.description }}
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </li>
         </ul>
     </nav>
@@ -19,39 +48,29 @@
 
 <script>
 import ramda from 'ramda'
+import marked from 'marked'
 export default {
     data: function() {
-        return {
-            chapters: ramda.map(
-                d => ({
-                    title: `Chapter #${d}`,
-                    lessons: ramda.map(
-                        d => ({
-                            title: `Lesson ${d}`,
-                            description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam ultrices tristique ante et tincidunt. Vivamus ac elit maximus, porta arcu sit amet, elementum arcu. Ut interdum lobortis felis, sed luctus nisl ullamcorper id.'
-                        }),
-                        ramda.range(1, 5)
-                    ),
-                    currentLesson: null
-                }),
-                ramda.range(1, 9)
-            ),
-            selectedChapter: null
-        }
+        return {}
     },
     computed: {
-        lessons() {
-            return this.selectedChapter ? this.selectedChapter.lessons : null
-        }
+
+    },
+    filters: {
+        marked
     },
     methods: {
-        selectChapter(chapter) {
-            this.selectedChapter = chapter
+        beginLesson(lesson) {
+            this.$dispatch('begin-lesson', lesson)
         },
-        startLesson(lesson) {
-            this.selectedChapter.currentLesson = lesson
+        selectChapter(chapter) {
+            this.$dispatch('select-chapter', chapter)
+        },
+        selectLesson(lesson) {
+            this.$dispatch('select-lesson', lesson)
         }
-    }
+    },
+    props: ['chapters', 'selectedChapter', 'selectedLesson', 'selectedStep']
 }
 </script>
 
@@ -65,5 +84,104 @@ export default {
 /* .expand-leave defines the ending state for leaving */
 .expand-enter, .expand-leave {
     opacity: 0;
+}
+
+.lesson-navigation {
+    display: flex;
+    flex: 1;
+}
+
+.accordion-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+}
+
+.accordion-item {
+    display: flex;
+    flex-direction: column;
+    transition: all .3s ease;
+    flex: 0 0 auto;
+}
+
+.accordion-item.is-active {
+    flex: 1 1 auto;
+}
+
+.accordion-header {
+    padding: .5em;
+    cursor: pointer;
+}
+
+.accordion-header:hover {
+    background: whitesmoke;
+}
+
+.accordion-header.is-active {
+    background-color: royalblue;
+    color: white;
+}
+
+.accordion-content {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 0%;
+    overflow: hidden;
+    height: 0;
+    transition: all 1s ease;
+}
+
+.accordion-content.is-active {
+    flex: 1 1 0%;
+    overflow: auto;
+}
+
+.chapter-description {
+    padding: 1em;
+}
+
+.lesson-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+}
+
+.lesson-item {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+}
+
+.lesson-item.is-active {
+    flex: 1;
+}
+
+.lesson-header {
+    flex: 0 0 auto;
+    padding: .5em;
+    cursor: pointer;
+}
+
+.lesson-header:hover {
+    background: whitesmoke;
+}
+
+.lesson-header.is-active {
+    border-left: thick solid royalblue;
+}
+
+.lesson-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: .5em;
+}
+
+.step-content {
+    flex: 1;
 }
 </style>

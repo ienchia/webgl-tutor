@@ -1,154 +1,129 @@
 <template>
-    <div id="app" class="cols">
-        <div id="viewer">
-            <div id="viewer-main">
-                <canvas id="viewer-canvas"></canvas>
+    <header id="app-header">
+        <div class="brand">
+            WebGL Tutor
+        </div>
+        <login-navigation
+            :session="session"
+            @login="login"
+            @logout="logout"></login-navigation>
+    </header>
+    <div id="app-content">
+        <aside id="navigation-sidebar">
+            <lesson-navigation
+                :chapters="chapters"
+                :selected-chapter="currentChapter"
+                :selected-lesson="currentLesson"
+                :selected-step="currentStep"
+                @begin-lesson="beginLesson"
+                @select-chapter="selectChapter"
+                @select-lesson="selectLesson">
+            </lesson-navigation>
+        </aside>
+        <main id="workspace">
+            <div class="file-navigation" v-if="currentStep && currentStep.sources">
+                <ul class="tab-list">
+                    <li class="tab-item"
+                        :class="{ 'is-active': currentSource == source }"
+                        @click="selectSource(source)"
+                        v-for="source in currentStep.sources">
+                        {{ source.name }}
+                    </li>
+                </ul>
             </div>
-            <button @click="run">Execute</button>
-        </div>
-        <div id="editor" class="cols">var main=function() {
-
-    var CANVAS=document.getElementById("viewer-canvas");
-
-    /*========================= GET WEBGL CONTEXT =============== */
-    var GL;
-    try {
-        GL = CANVAS.getContext("experimental-webgl", {antialias: true});
-    } catch (e) {
-        alert("You are not webgl compatible :(");
-        return false;
-    }
-
-    /*========================= SHADERS ========================= */
-    /*jshint multistr: true */
-    var shader_vertex_source="\n\
-    attribute vec2 position; //the position of the point\n\
-    attribute vec3 color;  //the color of the point\n\
-    \n\
-    varying vec3 vColor;\n\
-    void main(void) { //pre-built function\n\
-        gl_Position = vec4(position, 0., 1.); //0. is the z, and 1 is w\n\
-        vColor=color;\n\
-    }";
-
-
-    var shader_fragment_source="\n\
-    precision mediump float;\n\
-    \n\
-    \n\
-    \n\
-    varying vec3 vColor;\n\
-    void main(void) {\n\
-        gl_FragColor = vec4(vColor, 1.);\n\
-    }";
-
-
-    var get_shader=function(source, type, typeString) {
-        var shader = GL.createShader(type);
-        GL.shaderSource(shader, source);
-        GL.compileShader(shader);
-        if (!GL.getShaderParameter(shader, GL.COMPILE_STATUS)) {
-            alert("ERROR IN "+typeString+ " SHADER : " + GL.getShaderInfoLog(shader));
-            return false;
-        }
-        return shader;
-    };
-
-    var shader_vertex=get_shader(shader_vertex_source, GL.VERTEX_SHADER, "VERTEX");
-
-    var shader_fragment=get_shader(shader_fragment_source, GL.FRAGMENT_SHADER, "FRAGMENT");
-
-    var SHADER_PROGRAM=GL.createProgram();
-    GL.attachShader(SHADER_PROGRAM, shader_vertex);
-    GL.attachShader(SHADER_PROGRAM, shader_fragment);
-
-    GL.linkProgram(SHADER_PROGRAM);
-
-    var _color = GL.getAttribLocation(SHADER_PROGRAM, "color");
-    var _position = GL.getAttribLocation(SHADER_PROGRAM, "position");
-
-    GL.enableVertexAttribArray(_color);
-    GL.enableVertexAttribArray(_position);
-
-    GL.useProgram(SHADER_PROGRAM);
-
-
-    /*========================= THE TRIANGLE ========================= */
-    //POINTS :
-    var triangle_vertex=[
-    -1,-1, //first summit -> bottom left of the viewport
-    0,0,1,
-    1,-1, //bottom right of the viewport
-    1,1,0,
-    1,1,  //top right of the viewport
-    1,0,0
-    ];
-
-    var TRIANGLE_VERTEX= GL.createBuffer ();
-    GL.bindBuffer(GL.ARRAY_BUFFER, TRIANGLE_VERTEX);
-    GL.bufferData(GL.ARRAY_BUFFER,
-    new Float32Array(triangle_vertex),
-    GL.STATIC_DRAW);
-
-    //FACES :
-    var triangle_faces = [0,1,2];
-    var TRIANGLE_FACES= GL.createBuffer ();
-    GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, TRIANGLE_FACES);
-    GL.bufferData(GL.ELEMENT_ARRAY_BUFFER,
-    new Uint16Array(triangle_faces),
-    GL.STATIC_DRAW);
-
-
-
-    /*========================= DRAWING ========================= */
-    GL.clearColor(0.0, 0.0, 0.0, 0.0);
-
-    var animate=function() {
-
-        GL.viewport(0.0, 0.0, CANVAS.width, CANVAS.height);
-        GL.clear(GL.COLOR_BUFFER_BIT);
-
-        GL.bindBuffer(GL.ARRAY_BUFFER, TRIANGLE_VERTEX);
-
-        GL.vertexAttribPointer(_position, 2, GL.FLOAT, false,4*(2+3),0) ;
-        GL.vertexAttribPointer(_color, 3, GL.FLOAT, false,4*(2+3),2*4) ;
-
-        GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, TRIANGLE_FACES);
-        GL.drawElements(GL.TRIANGLES, 3, GL.UNSIGNED_SHORT, 0);
-        GL.flush();
-
-        window.requestAnimationFrame(animate);
-    };
-
-    animate();
-};
-
-main();
-        </div>
+            <div class="file-editor" v-if="currentSource">
+                <div class="file-editor" v-source-editor.html="currentSource.content"
+                    v-if="/\.html$/.test(currentSource.name)">
+                </div>
+                <div class="file-editor" v-source-editor.javascript="currentSource.content"
+                    v-if="/\.js$/.test(currentSource.name)">
+                </div>
+                <div id="viewer">
+                    <div id="viewer-main">
+                        <iframe :src="executeUrl" width="320" height="240"></iframe>
+                    </div>
+                    <button @click="execute">Execute</button>
+                </div>
+            </div>
+        </main>
     </div>
+    <footer id="app-footer">&copy; 2016</footer>
 </template>
 
 <script>
-import ace from 'brace'
-import 'brace/mode/javascript'
-import 'brace/theme/monokai'
+import css from '../css/style.css'
+import fa from '../css/font-awesome.min.css'
+
+import request from 'superagent'
+
+import LoginNavigation from './components/LoginNavigation.vue'
+import LessonNavigation from './components/LessonNavigation.vue'
+import SourceEditor from './directives/SourceEditor.js'
 
 export default {
+    components: {
+        LessonNavigation,
+        LoginNavigation,
+    },
+    directives: {
+        SourceEditor
+    },
     data: function () {
         return {
-            count: 0,
-            changes: 0
+            chapters: [],
+            currentChapter: null,
+            currentLesson: null,
+            currentStep: null,
+            currentSource: null,
+            executeUrl: null,
+            session: null
         }
     },
     methods: {
-        increment() {
-            this.count = this.count + 1
-        },
-        incrementChange() {
-            this.changes = this.changes + 1
+        beginLesson(lesson) {
+            request
+            .get(`http://${process.env.API_URL}/lessons/${lesson.id}/steps`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    lesson.steps = res.body.map(
+                        step => {
+                            step.sources = null
+                            return step
+                        }
+                    )
+                    const step = lesson.steps[0] || null
+                    this.refreshStepSources(step)
+                    this.currentStep = step
+                }
+            })
         },
         execute() {
-            this.show = true
+            this.executeUrl = null
+            this.$nextTick(() => {
+                this.executeUrl = this.currentChapter
+                    && this.currentLesson
+                    && this.currentStep
+                    && this.currentStep.id
+                    ? `http://${process.env.API_URL}`
+                        + `/files`
+                        + `/chapters/${this.currentChapter.id}`
+                        + `/lessons/${this.currentLesson.id}`
+                        + `/steps/${this.currentStep.id}`
+                        + `/index.html`
+                    : ''
+            })
+        },
+        login(credentials) {
+            setTimeout(() => {
+                this.$nextTick(() => {
+                    this.session = {
+                        username: 'ienchia'
+                    }
+                })
+            }, 1000)
+        },
+        logout() {
+            this.session = null
         },
         run() {
             if (!this.editor) return null
@@ -165,84 +140,184 @@ export default {
                 var result = container.appendChild(newScript)
             }
             this.script = newScript
+        },
+        refreshChapterLessons(chapter) {
+            this.currentLesson = null
+            request
+            .get(`http://${process.env.API_URL}/chapters/${chapter.id}/lessons`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    chapter.lessons = res.body.map(
+                        lesson => {
+                            lesson.steps = null
+                            return lesson
+                        }
+                    )
+                }
+            })
+        },
+        refreshLessonSteps(lesson) {
+            this.currentStep = null
+            request
+            .get(`http://${process.env.API_URL}/lessons/${lesson.id}/steps`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    lesson.steps = res.body.map(
+                        step => {
+                            step.sources = null
+                            return step
+                        }
+                    )
+                }
+            })
+        },
+        refreshStepSources(step) {
+            request
+            .get(`http://${process.env.API_URL}/steps/${step.id}/sources`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    step.sources = res.body.map(
+                        source => {
+                            return source
+                        }
+                    )
+                }
+            })
+        },
+        selectChapter(chapter) {
+            this.refreshChapterLessons(chapter)
+            this.currentChapter = chapter
+        },
+        selectLesson(lesson) {
+            this.refreshLessonSteps(lesson)
+            this.currentLesson = lesson
+        },
+        selectStep(step) {
+            this.refreshStepSources(step)
+            this.currentStep = step
+        },
+        selectSource(source) {
+            this.currentSource = source
         }
     },
     ready: function () {
-        this.editor = ace.edit('editor')
-        this.editor.getSession().setMode('ace/mode/javascript')
-        this.editor.setTheme('ace/theme/monokai')
+        request
+        .get(`http://${process.env.API_URL}/chapters`)
+        .end((err, res) => {
+            if (!err && res.ok) {
+                this.chapters = res.body.map(
+                    d => {
+                        d.lessons = null
+                        return d
+                    }
+                )
+            }
+        })
     }
 }
 </script>
 
 <style>
+#app-header {
+    display: flex;
+    flex: 0 0 auto;
+    padding: 1em;
+}
+
+#app-content {
+    display: flex;
+    flex: 1;
+}
+
+#app-footer {
+    flex: 0;
+    padding: 1em;
+}
+
+#navigation-sidebar {
+    display: flex;
+    flex: 0 0 auto;
+    width: 240px;
+}
+
+#workspace {
+    display: flex;
+    flex: 1;
+}
+
 #app {
+    display: flex;
     position: relative;
-}
-
-#app button {
-    border: thin outset green;
-    color: green;
-    padding: 5px;
-    background: none;
-    transition: all .5s ease-out;
-    width: 100%;
-}
-
-#app button:hover {
-    border: thin solid transparent;
-    color: white;
-    padding: 5px;
-    background: green;
-}
-
-#app button:active {
-    border: thin solid green;
-    font-weight: bold;
-    color: green;
-    padding: 5px;
-    background: white;
-    transition: all 0s ease;
+    flex: 1;
 }
 
 #viewer {
+    display: flex;
     position: absolute;
-    top: 15px;
-    right: 20px;
-    background: white;
-    border-radius: 5px;
-    padding: 5px;
-    z-index: 10;
-    transition: all .5s ease;
+    top: 0;
+    right: 0;
+    margin: 1em;
+    flex-direction: column;
+    background-color: white;
     opacity: .1;
+    transition: all 1s ease;
+    z-index: 5;
 }
 
 #viewer:hover {
     opacity: 1;
 }
 
-#viewer-canvas {
-    width: 300px;
-    height: 225px;
+#editor {
+    flex: 1;
 }
 
-.layout-vertical {
-    background: #201020;
+#workspace {
     display: flex;
-    flex-flow: column;
-    min-height: 400px;
+    flex-direction: column;
+    flex: 1;
 }
 
-.layout-vertical-flex {
-    flex: 1 1 auto;
+.brand {
+    flex: 1;
 }
 
-.layout-vertical-fixed {
-    flex: none;
+.file-navigation {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
 }
 
-.item {
-    margin: 5px;
+.tab-list {
+    display: flex;
+    flex: 0 0 auto;
+    padding: 0;
+    margin: 0;
+    background: yellowgreen;
+}
+
+.tab-item {
+    display: flex;
+    flex: 0 0 auto;
     background: white;
+    opacity: .5;
+    padding: .2em 1em;
+    margin-top: 4px;
+    margin-right: 4px;
+    cursor: pointer;
+}
+
+.tab-item:first-child {
+    margin-left: 4px;
+}
+
+.tab-item.is-active {
+    opacity: 1;
+}
+
+.file-editor {
+    position: relative;
+    display: flex;
+    flex: 1;
 }
 </style>
