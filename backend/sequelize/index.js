@@ -25,8 +25,8 @@ fs
 .readdirSync(__dirname + '/models')
 .filter(
     file =>
-        (file.indexOf('.') !== 0)
-        && (file !== 'index.js')
+    (file.indexOf('.') !== 0)
+    && (file !== 'index.js')
 )
 .forEach(
     file => {
@@ -39,12 +39,18 @@ fs
 )
 
 Object.keys(db).forEach(function(modelName) {
-  if ("associate" in db[modelName]) {
-    db[modelName].associate(db);
-  }
+    if ("associate" in db[modelName]) {
+        db[modelName].associate(db);
+    }
 });
 
-sequelize.sync({ force: true })
+sequelize.sync()
+
+process.env.NODE_ENV == 'development'
+&& process.env.TABLES
+&& process.env.TABLES.split(',').forEach(function (tableName) {
+    db[tableName].sync({ force: true })
+})
 
 db.sequelize = sequelize
 db.Sequelize = Sequelize

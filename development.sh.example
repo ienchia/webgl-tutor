@@ -4,6 +4,7 @@ export DATABASE_HOST=127.0.0.1
 export DATABASE_PORT=3306
 export DATABASE_NAME=database
 export DATABASE_USER=root
+export TABLES=chapter,lesson,source,step,user
 npm run server | tee server.log &
 export API_URL=localhost
 npm run dev | tee client.log
