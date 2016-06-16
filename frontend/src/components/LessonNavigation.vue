@@ -24,6 +24,8 @@
                             <div class="lesson-header"
                                 :class="{ 'is-active': selectedLesson == lesson }"
                                 @click="selectLesson(lesson)">
+                                <span class="fa fa-spin fa-pulse fa-spinner" v-if="lesson.isDetermining"></span>
+                                <span class="fa fa-check-circle" v-if="lesson.lessonHistory"></span>
                                 Lesson {{ $index }}: {{ lesson.title }}
                             </div>
                             <div class="lesson-content"

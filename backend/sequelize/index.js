@@ -33,7 +33,6 @@ fs
         const model = sequelize.import(
             path.join(__dirname + '/models', file)
         )
-
         db[model.name] = model
     }
 )
@@ -44,13 +43,11 @@ Object.keys(db).forEach(function(modelName) {
     }
 });
 
-sequelize.sync()
-
 process.env.NODE_ENV == 'development'
-&& process.env.TABLES
-&& process.env.TABLES.split(',').forEach(function (tableName) {
-    db[tableName].sync({ force: true })
-})
+&& sequelize.sync({ force: true })
+
+process.env.NODE_ENV == 'production'
+&& sequelize.sync()
 
 db.sequelize = sequelize
 db.Sequelize = Sequelize

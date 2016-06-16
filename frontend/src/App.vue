@@ -1,16 +1,22 @@
 <template>
-    <header id="app-header">
-        <div class="brand">
+    <header id="app-header" :class="{ 'l-fill': !session }">
+        <div class="brand" :class="{ 'is-jumbo': !session }">
             WebGL Tutor
         </div>
         <login-navigation
             :session="session"
+            :is-logging-in="isLoggingIn"
+            :is-registering="isRegistering"
+            :is-register-success="isRegisterSuccess"
+            :login-credential="loginCredential"
+            :register-error-message="registerErrorMessage"
             @login="login"
-            @logout="logout">
+            @logout="logout"
+            @register="register">
         </login-navigation>
     </header>
-    <div id="app-content">
-        <aside id="navigation-sidebar">
+    <div id="app-content" :class="{ 'l-fixed': !session }">
+        <aside id="navigation-sidebar" v-if="session">
             <lesson-navigation
                 :chapters="chapters"
                 :selected-chapter="currentChapter"
@@ -21,7 +27,7 @@
                 @select-lesson="selectLesson">
             </lesson-navigation>
         </aside>
-        <main id="workspace">
+        <main id="workspace" v-if="session">
             <div class="workspace-nav">
                 <div class="file-navigation" v-if="currentStep && currentStep.sources">
                     <ul class="tab-list">
@@ -66,6 +72,7 @@
 import css from '../css/style.css'
 import fa from '../css/font-awesome.min.css'
 
+import ramda from 'ramda'
 import request from 'superagent'
 
 import LoginNavigation from './components/LoginNavigation.vue'
@@ -88,6 +95,14 @@ export default {
             currentStep: null,
             currentSource: null,
             executeUrl: null,
+            isLoggingIn: false,
+            isRegistering: false,
+            isRegisterSuccess: false,
+            loginCredential: {
+                username: null,
+                password: null
+            },
+            registerErrorMessage: null,
             runOnce: false,
             sendingSource: false,
             session: null
@@ -154,20 +169,44 @@ export default {
             this.sendingSource = true
         },
         finishLesson() {
-            this.selectChapter(this.currentChapter)
+            request
+            .post(`http://${process.env.API_URL}/users/${this.session.userId}/lesson-histories`)
+            .send({ lessonId: this.currentLesson.id })
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    console.log(res.body)
+                    this.selectChapter(this.currentChapter)
+                }
+            })
         },
         login(credentials) {
+            this.isLoggingIn = true
+            console.log(credentials)
             setTimeout(() => {
-                this.$nextTick(() => {
-                    this.session = {
-                        id: 1,
-                        username: 'ienchia'
+                request
+                .post(`http://${process.env.API_URL}/login`)
+                .send(credentials)
+                .end((err, res) => {
+                    if (!err && res.ok) {
+                        this.session = res.body
                     }
+                    this.isLoggingIn = false
                 })
             }, 1000)
         },
         logout() {
-            this.session = null
+            request
+            .delete(`http://${process.env.API_URL}/login`)
+            .send({})
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.session = null
+                }
+            })
+            this.currentChapter = null
+            this.currentLesson = null
+            this.currentStep = null
+            this.currentSource = null
         },
         nextStep() {
             if (!this.currentLesson || !this.currentLesson.steps) return null
@@ -178,22 +217,6 @@ export default {
             }
             this.selectStep(steps[i + 1])
         },
-        run() {
-            if (!this.editor) return null
-
-            const newScript = document.createElement('script')
-            newScript.appendChild(
-                document.createTextNode(this.editor.getValue())
-            )
-            const container = document.querySelector('#viewer-main')
-            if (this.script) {
-                container.replaceChild(newScript, this.script)
-            }
-            else {
-                var result = container.appendChild(newScript)
-            }
-            this.script = newScript
-        },
         refreshChapterLessons(chapter) {
             this.currentLesson = null
             request
@@ -202,10 +225,25 @@ export default {
                 if (!err && res.ok) {
                     chapter.lessons = res.body.map(
                         lesson => {
+                            lesson.isDetermining = true
+                            lesson.lessonHistory = null
                             lesson.steps = null
                             return lesson
                         }
                     )
+                    setTimeout(() => {
+                        request
+                        .get(`http://${process.env.API_URL}/users/${this.session.userId}/lesson-histories`)
+                        .end((err, res) => {
+                            if (!err && res.ok) {
+                                this.currentChapter.lessons.map(lesson => {
+                                    lesson.isDetermining = false
+                                    lesson.lessonHistory = ramda.find(ramda.propEq('id', lesson.LessonHistoryId), res.body)
+                                    return lesson
+                                })
+                            }
+                        })
+                    }, 900)
                 }
             })
         },
@@ -236,6 +274,30 @@ export default {
                     )
                 }
             })
+        },
+        register(user) {
+            this.isRegistering = true
+            this.registerErrorMessage = null
+            this.isRegisterSuccess = false
+            setTimeout(() => {
+                request
+                .post(`http://${process.env.API_URL}/users`)
+                .send({
+                    fullname: user.fullname,
+                    password: user.password,
+                    username: user.username
+                })
+                .end((err, res) => {
+                    if (!err && res.ok) {
+                        this.isRegistering = false
+                        this.isRegisterSuccess = true
+                    }
+                    else {
+                        this.isRegistering = false
+                        this.registerErrorMessage = "register failed"
+                    }
+                })
+            }, 1000)
         },
         selectChapter(chapter) {
             this.refreshChapterLessons(chapter)
@@ -283,12 +345,23 @@ export default {
 #app-header {
     display: flex;
     flex: 0 0 auto;
+    align-items: center;
     padding: 1em;
+    transition: all 1s ease;
+}
+
+#app-header.l-fill {
+    flex: 1 1 auto;
 }
 
 #app-content {
     display: flex;
     flex: 1;
+    transition: all 1s ease;
+}
+
+#app-content.l-fixed {
+    flex: 0 0 auto;
 }
 
 #app-footer {
@@ -342,6 +415,13 @@ export default {
 
 .brand {
     flex: 1;
+    font-weight: lighter;
+    font-size: 1.4em;
+    transition: all 1s ease;
+}
+
+.brand.is-jumbo {
+    font-size: 6em;
 }
 
 .file-navigation {

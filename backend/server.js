@@ -14,6 +14,7 @@ const fileUtil = require('./lib/file-util.js')
 const chapters = require('./chapters.js')
 const db = require('./sequelize')
 const login = require('./login')
+const lessonHistories = require('./lesson-histories')
 const lessons = require('./lessons')
 const sources = require('./sources')
 const steps = require('./steps')
@@ -132,51 +133,69 @@ app.use(route.options(
 *  Logins
 **/
 app.use(route.get(
-    '/login/create',
+    '/login',
+    login.get
+))
+app.use(route.post(
+    '/login',
     login.create
 ))
-app.use(route.get(
-    '/login/delete',
+app.use(route.delete(
+    '/login',
     login.delete
+))
+app.use(route.options(
+    '/login',
+    restUtil
+    .createOptionsResponse(['POST', 'DELETE'])
 ))
 /**
 *  Users
 **/
+app.use(route.post(
+    '/users',
+    users.create
+))
 app.use(route.options(
     '/users',
-    users.options
-))
-app.use(route.options(
-    '/users/:id',
-    users.options
-))
-app.use(route.delete(
-    '/users/:id',
-    users.delete
-))
-app.use(route.get(
-    '/users',
-    users.list
+    restUtil
+    .createOptionsResponse(['POST'])
 ))
 app.use(route.get(
     '/users/:id',
     users.show
 ))
+app.use(route.delete(
+    '/users/:id',
+    users.delete
+))
+app.use(route.options(
+    '/users/:id',
+    restUtil
+    .createOptionsResponse(['GET', 'DELETE'])
+))
+app.use(route.get(
+    '/users/:id/lesson-histories',
+    lessonHistories.list
+))
 app.use(route.post(
-    '/users',
-    users.create
+    '/users/:id/lesson-histories',
+    lessonHistories.create
+))
+app.use(route.options(
+    '/users/:id/lesson-histories',
+    restUtil
+    .createOptionsResponse(['GET', 'POST'])
 ))
 app.use(route.get(
     '/users/:id/sandbox',
     function* (id) {
-        console.log('redirect')
         this.response.redirect(`/files/users/${id}/sandbox/index.html`)
     }
 ))
 app.use(route.post(
     '/users/:id/sandbox',
     function* (id) {
-        console.log(this.request.body)
         const file = yield fileUtil
         .resolveFile(
             `public/files/users/${id}/sandbox/${this.request.body.filename}`,

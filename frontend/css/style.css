@@ -443,8 +443,32 @@ button {
     outline: none;
 }
 
-button:hover {
+button:hover, button:focus {
     background: royalblue;
     color: white;
     border-color: transparent;
+}
+
+button.is-secondary {
+    color: yellowgreen;
+    border-color: yellowgreen;
+}
+
+button.is-secondary:hover, button.is-secondary:focus {
+    background: yellowgreen;
+    color: white;
+    border-color: yellowgreen;
+}
+
+.message {
+    margin: 5px 0;
+    font-size: .8em;
+}
+
+.message.is-success {
+    color: yellowgreen;
+}
+
+.message.is-error {
+    color: tomato;
 }

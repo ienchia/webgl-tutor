@@ -1,11 +1,15 @@
-module.exports = function(after) {
+module.exports = function(options) {
     return function* (next) {
-        if (this.session.username) {
-            yield after
-        }
-        else {
-            yield next
-            this.throw(401)
+        options.match
+        && options.match.test(this.request.url)
+        && this.session
+        if (options.match.test(this.request.url)) {
+            if (this.session) {
+
+            }
+            else {
+                yield next
+            }
         }
     }
 }

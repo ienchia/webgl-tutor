@@ -1,20 +1,65 @@
 <template>
     <nav class="login-navigation">
-        <div class="dropdown login-control" v-show="isLoggedIn">
+        <div class="login-control controls" v-show="!isLoggedIn">
+            <form id="login-form">
+                <label>Username</label>
+                <input class="control-item" type="text" placeholder="username" v-model="loginCredential.username" />
+                <label>Password</label>
+                <input class="control-item" type="password" placeholder="password" v-model="loginCredential.password" />
+                <button type="button" class="control-item" v-on:click="login">
+                    <div class="" v-if="isLoggingIn">
+                        <span class="fa fa-spin fa-circle-o-notch"></span> Logging In
+                    </div>
+                    <div class="" v-else>
+                        Login
+                    </div>
+                </button>
+            </form>
+            <div class="separator">
+                Or
+            </div>
+            <form id="register-form">
+                <label>Full name</label>
+                <input class="control-item" type="text" placeholder="Firstname Lastname" v-model="registerCredential.fullname" />
+                <label>Username</label>
+                <input class="control-item" type="text" placeholder="username" v-model="registerCredential.username" />
+                <label>Password</label>
+                <input class="control-item" type="password" placeholder="password" v-model="registerCredential.password" />
+                <label>Confirm Password</label>
+                <input class="control-item" type="password" placeholder="confirm password" v-model="registerCredential.confirmPassword" />
+                <div class="message is-error" v-if="!isConfirmPasswordCorrect">
+                    Confirm password does not match password
+                </div>
+                <div class="message is-error" v-if="registerErrorMessage">
+                    {{ registerErrorMessage }}
+                </div>
+                <div class="message is-success" v-if="isRegisterSuccess">
+                    User registered
+                </div>
+                <button type="button" class="is-secondary" @click='register'>
+                    <div class="" v-if="isRegistering">
+                        <span class="fa fa-spin fa-cog"></span> Registering
+                    </div>
+                    <div class="" v-else>
+                        Register
+                    </div>
+                </button>
+            </form>
+        </div>
+        <div class="dropdown login-control" v-else>
             <div class="dropdown-header">
                 <span class="fa fa-user"></span> {{ username }}
             </div>
             <ul class="dropdown-list">
                 <li class="dropdown-item">
-                    {{ username }}
+                    <button type="button">
+                        <a href="http://google.com">Feedback</a>
+                    </button>
                 </li>
                 <li class="dropdown-item">
                     <button v-on:click="logout">Logout</button>
                 </li>
             </ul>
-        </div>
-        <div class="login-control" v-else>
-            <button v-on:click="login">Login</button>
         </div>
     </nav>
 </template>
@@ -23,26 +68,46 @@
 import ramda from 'ramda'
 
 export default {
-    data: function () {
-        return {}
-    },
     computed: {
         username() {
             return this.session ? this.session.username : ''
         },
         isLoggedIn() {
             return this.session ? true : false
+        },
+        isConfirmPasswordCorrect() {
+            return this.registerCredential.confirmPassword == null || this.registerCredential.password == this.registerCredential.confirmPassword
+        }
+    },
+    data: function () {
+        return {
+            registerCredential: {
+                fullname: null,
+                username: null,
+                password: null,
+                confirmPassword: null
+            }
         }
     },
     methods: {
         login() {
-            this.$dispatch('login', { username: '', password: '' })
+            this.$dispatch('login', this.loginCredential)
         },
         logout() {
             this.$dispatch('logout')
+        },
+        register() {
+            this.$dispatch('register', this.registerCredential)
         }
     },
-    props: ['session']
+    props: [
+        'session',
+        'isLoggingIn',
+        'loginCredential',
+        'isRegistering',
+        'isRegisterSuccess',
+        'registerErrorMessage'
+    ]
 }
 
 </script>
@@ -58,6 +123,10 @@ export default {
     flex-direction: column;
     position: relative;
     z-index: 10;
+}
+
+.dropdown-header {
+    margin: auto;
 }
 
 .dropdown-list {
@@ -76,6 +145,7 @@ export default {
 .dropdown-item {
     background: white;
     display: flex;
+    flex-direction: column;
     flex: 0 0 auto;
     overflow: hidden;
     padding: 0;
@@ -93,6 +163,31 @@ export default {
 }
 
 .login-control {
+    display: flex;
+    flex: 1;
+    align-items: center;
     min-height: 1.6em;
+}
+
+.login-control-item {
+    margin: auto;
+}
+
+#login-form, #register-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin: 1em;
+}
+
+.separator {
+    font-weight: lighter;
+    font-size: 1.5em;
+}
+
+.error-message {
+    width: 100%;
+    font-size: .8em;
+    color: tomato;
 }
 </style>
