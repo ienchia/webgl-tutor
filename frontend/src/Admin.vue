@@ -54,7 +54,8 @@
                         <source-list
                             :selected-source.sync="selectedSource"
                             :sources="selectedStep.sources"
-                            @add-source="addSourceToStep">
+                            @add-source="addSourceToStep"
+                            @delete-source="deleteSource">
                         </source-list>
                     </div>
                     <div class="col cols" v-if="selectedSource">
@@ -179,6 +180,15 @@ export default {
                 + `/sources`
             )
             .send(source)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.refreshStepSources(this.selectedStep)
+                }
+            })
+        },
+        deleteSource(source) {
+            request
+            .delete(`http://${process.env.API_URL}/sources/${source.id}`)
             .end((err, res) => {
                 if (!err && res.ok) {
                     this.refreshStepSources(this.selectedStep)

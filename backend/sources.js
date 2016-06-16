@@ -7,25 +7,19 @@ module.exports = {
         const filename = this.request.body.name
         const type = getType(this.request.body.name)
 
-        const file = yield fileUtil.resolveFile(
-            `chapters/${chapterId}/lessons/${lessonId}/steps/${stepId}`,
-            filename,
-            content
-        )
-        if (file) {
-            const step = yield db.Step.findById(stepId)
-            const source = yield db.Source.create({
-                name: filename,
-                type: type,
-                content: content,
-                location: file.location
-            })
-            yield step.addSource(source)
-            this.body = source
-        }
-        else {
-            this.throw(404)
-        }
+        const step = yield db.Step.findById(stepId)
+        const source = yield db.Source.create({
+            name: filename,
+            type: type,
+            content: content,
+            location: `chapters/${chapterId}/lessons/${lessonId}/steps/${stepId}`
+        })
+        yield step.addSource(source)
+        this.body = source
+    },
+    *delete(id) {
+        const source = yield db.Source.findById(id)
+        this.body = source.destroy()
     },
     *list() {
         const sources = yield db.Source.findAll()
@@ -40,24 +34,15 @@ module.exports = {
         const location = this.request.body.location
         const type = getType(this.request.body.name)
 
-        const file = yield fileUtil.updateFile(
-            location,
-            content
-        )
-        if (file) {
-            const target = yield db.Source.findById(sourceId)
-            const source = yield target.update({
-                id,
-                name: filename,
-                type,
-                content,
-                location: file.location
-            })
-            this.body = source
-        }
-        else {
-            this.throw(404)
-        }
+        const target = yield db.Source.findById(sourceId)
+        const source = yield target.update({
+            id,
+            name: filename,
+            type,
+            content,
+            location: location
+        })
+        this.body = source
     }
 }
 

@@ -10,6 +10,7 @@
                 </div>
                 <div class="card-header">
                     {{ source.name }}
+                    <button type="button" @click="deleteSource(source)">Delete</button>
                 </div>
             </li>
             <li class="card">
@@ -32,11 +33,14 @@ export default {
         }
     },
     methods: {
-        selectSource(source) {
-            this.selectedSource = source
-        },
         addSource(source) {
             this.$dispatch('add-source', source)
+        },
+        deleteSource(source) {
+            this.$dispatch('delete-source', source)
+        },
+        selectSource(source) {
+            this.selectedSource = source
         }
     },
     props: [ 'selectedSource', 'sources' ]

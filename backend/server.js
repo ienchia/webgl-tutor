@@ -40,7 +40,8 @@ app.use(route.get(
 ))
 app.use(route.options(
     '/chapters',
-    chapters.options
+    restUtil
+    .createOptionsResponse(['GET'])
 ))
 app.use(route.post(
     '/chapters',
@@ -52,7 +53,8 @@ app.use(route.get(
 ))
 app.use(route.options(
     '/chapters/:id',
-    chapters.options
+    restUtil
+    .createOptionsResponse(['GET', 'POST'])
 ))
 app.use(route.put(
     '/chapters/:id',
@@ -62,13 +64,14 @@ app.use(route.get(
     '/chapters/:id/lessons',
     chapters.listLessons
 ))
-app.use(route.options(
-    '/chapters/:id/lessons',
-    chapters.options
-))
 app.use(route.post(
     '/chapters/:id/lessons',
     chapters.createLesson
+))
+app.use(route.options(
+    '/chapters/:id/lessons',
+    restUtil
+    .createOptionsResponse(['GET', 'POST'])
 ))
 app.use(route.post(
     '/chapters/:chapterId/lessons/:lessonId/steps/:stepId/sources',
@@ -76,11 +79,8 @@ app.use(route.post(
 ))
 app.use(route.options(
     '/chapters/:chapterId/lessons/:lessonId/steps/:stepId/sources',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['GET', 'POST'])
-    }
+    restUtil
+    .createOptionsResponse(['GET', 'POST'])
 ))
 /**
 *  Lessons
@@ -92,11 +92,9 @@ app.use(route.get(
 ))
 app.use(route.options(
     '/lessons',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['GET'])
-    }
+    restUtil
+    .createOptionsResponse(['GET'])
+
 ))
 app.use(route.delete(
     '/lessons/:id',
@@ -112,11 +110,9 @@ app.use(route.put(
 ))
 app.use(route.options(
     '/lessons/:id',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['GET', 'PUT', 'DELETE'])
-    }
+    restUtil
+    .createOptionsResponse(['GET', 'PUT', 'DELETE'])
+
 ))
 app.use(route.get(
     '/lessons/:id/steps',
@@ -128,11 +124,9 @@ app.use(route.post(
 ))
 app.use(route.options(
     '/lessons/:id/steps',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['GET', 'POST'])
-    }
+    restUtil
+    .createOptionsResponse(['GET', 'POST'])
+
 ))
 /**
 *  Logins
@@ -172,6 +166,30 @@ app.use(route.post(
     '/users',
     users.create
 ))
+app.use(route.get(
+    '/users/:id/sandbox',
+    function* (id) {
+        console.log('redirect')
+        this.response.redirect(`/files/users/${id}/sandbox/index.html`)
+    }
+))
+app.use(route.post(
+    '/users/:id/sandbox',
+    function* (id) {
+        console.log(this.request.body)
+        const file = yield fileUtil
+        .resolveFile(
+            `public/files/users/${id}/sandbox/${this.request.body.filename}`,
+            this.request.body.content
+        )
+        this.body = file
+    }
+))
+app.use(route.options(
+    '/users/:id/sandbox',
+    restUtil
+    .createOptionsResponse(['GET', 'POST'])
+))
 /**
 * Sources
 */
@@ -181,23 +199,22 @@ app.use(route.get(
 ))
 app.use(route.options(
     '/sources',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['GET'])
-    }
+    restUtil
+    .createOptionsResponse(['GET'])
+
 ))
 app.use(route.put(
     '/sources/:id',
     sources.update
 ))
+app.use(route.delete(
+    '/sources/:id',
+    sources.delete
+))
 app.use(route.options(
     '/sources/:id',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['PUT'])
-    }
+    restUtil
+    .createOptionsResponse(['PUT', 'DELETE'])
 ))
 /**
 * Steps
@@ -208,11 +225,8 @@ app.use(route.put(
 ))
 app.use(route.options(
     '/steps/:id',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['PUT'])
-    }
+    restUtil
+    .createOptionsResponse(['PUT'])
 ))
 app.use(route.get(
     '/steps/:id/sources',
@@ -224,11 +238,8 @@ app.use(route.post(
 ))
 app.use(route.options(
     '/steps/:id/sources',
-    function* () {
-        restUtil
-        .createOptionsResponse
-        .call(this, ['GET', 'POST'])
-    }
+    restUtil
+    .createOptionsResponse(['GET', 'POST'])
 ))
 /**
 * File systems

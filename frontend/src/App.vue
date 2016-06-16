@@ -6,7 +6,8 @@
         <login-navigation
             :session="session"
             @login="login"
-            @logout="logout"></login-navigation>
+            @logout="logout">
+        </login-navigation>
     </header>
     <div id="app-content">
         <aside id="navigation-sidebar">
@@ -21,28 +22,39 @@
             </lesson-navigation>
         </aside>
         <main id="workspace">
-            <div class="file-navigation" v-if="currentStep && currentStep.sources">
-                <ul class="tab-list">
-                    <li class="tab-item"
-                        :class="{ 'is-active': currentSource == source }"
-                        @click="selectSource(source)"
-                        v-for="source in currentStep.sources">
-                        {{ source.name }}
-                    </li>
-                </ul>
+            <div class="workspace-nav">
+                <div class="file-navigation" v-if="currentStep && currentStep.sources">
+                    <ul class="tab-list">
+                        <li class="tab-item"
+                            :class="{ 'is-active': currentSource == source }"
+                            @click="selectSource(source)"
+                            v-for="source in currentStep.sources">
+                            {{ source.name }}
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="file-editor" v-if="currentSource">
-                <div class="file-editor" v-source-editor.html="currentSource.content"
-                    v-if="/\.html$/.test(currentSource.name)">
-                </div>
-                <div class="file-editor" v-source-editor.javascript="currentSource.content"
-                    v-if="/\.js$/.test(currentSource.name)">
-                </div>
-                <div id="viewer">
-                    <div id="viewer-main">
-                        <iframe :src="executeUrl" width="320" height="240"></iframe>
+            <div class="workspace-content">
+                <div class="file-editor" v-if="currentSource">
+                    <div class="file-editor" v-source-editor.html="currentSource.content"
+                        v-if="/\.html$/.test(currentSource.name)">
                     </div>
-                    <button @click="execute">Execute</button>
+                    <div class="file-editor" v-source-editor.javascript="currentSource.content"
+                        v-if="/\.js$/.test(currentSource.name)">
+                        </div>
+                    <div id="viewer">
+                        <div id="viewer-main">
+                            <iframe :src="executeUrl" width="320" height="240"></iframe>
+                        </div>
+                        <button @click="execute">{{ this.sendingSource ? 'Sending' : 'Run' }}</button>
+                    </div>
+                </div>
+            </div>
+            <div class="workspace-footer">
+                <div class="step-control" :class="{ 'is-active': runOnce }">
+                    Do You want to continue?
+                    <button class="step-control-button" type="button" @click="nextStep" v-if="currentStep">Next Step</button>
+                    <button class="step-control-button" type="button" @click="finishLesson" v-if="currentStep && currentStep == currentLesson.steps[currentLesson.steps.length - 1]">Done</button>
                 </div>
             </div>
         </main>
@@ -76,6 +88,8 @@ export default {
             currentStep: null,
             currentSource: null,
             executeUrl: null,
+            runOnce: false,
+            sendingSource: false,
             session: null
         }
     },
@@ -98,25 +112,55 @@ export default {
             })
         },
         execute() {
-            this.executeUrl = null
-            this.$nextTick(() => {
-                this.executeUrl = this.currentChapter
-                    && this.currentLesson
-                    && this.currentStep
-                    && this.currentStep.id
-                    ? `http://${process.env.API_URL}`
-                        + `/files`
-                        + `/chapters/${this.currentChapter.id}`
-                        + `/lessons/${this.currentLesson.id}`
-                        + `/steps/${this.currentStep.id}`
-                        + `/index.html`
-                    : ''
+            !this.sendingSource
+            && this.currentStep
+            && this.currentStep.sources
+            && this.currentStep.sources.map(source => {
+                return () => {
+                    console.log('sending ' + source.name)
+                    return new Promise((resolve, reject) => {
+                        request
+                        .post(`http://${process.env.API_URL}/users/${this.session.id}/sandbox`)
+                        .send({ filename: source.name, content: source.content })
+                        .end((err, res) => {
+                            console.log(err)
+                            console.log(res)
+                            !err && res.ok
+                            ? console.log('end ' + source.name)
+                            : console.log(source.name + err)
+                            !err && res.ok && resolve()
+                        })
+                    })
+                }
             })
+            .reduce((a, b) => {
+                return a.then(() => b())
+            }, Promise.resolve())
+            .then(
+                () => {
+                    console.log('view')
+                    this.executeUrl = null
+                    this.$nextTick(() => {
+                        this.executeUrl = `http://${process.env.API_URL}/users/${this.session.id}/sandbox`
+                        this.sendingSource = false
+                        this.runOnce = true
+                    })
+                },
+                err => {
+                    console.log(err)
+                    this.sendingSource = false
+                }
+            )
+            this.sendingSource = true
+        },
+        finishLesson() {
+            this.selectChapter(this.currentChapter)
         },
         login(credentials) {
             setTimeout(() => {
                 this.$nextTick(() => {
                     this.session = {
+                        id: 1,
                         username: 'ienchia'
                     }
                 })
@@ -124,6 +168,15 @@ export default {
         },
         logout() {
             this.session = null
+        },
+        nextStep() {
+            if (!this.currentLesson || !this.currentLesson.steps) return null
+            const steps = this.currentLesson.steps
+            var i = 0
+            for (i = 0; i < steps.length; i++) {
+                if (steps[i] == this.currentStep) break
+            }
+            this.selectStep(steps[i + 1])
         },
         run() {
             if (!this.editor) return null
@@ -187,14 +240,23 @@ export default {
         selectChapter(chapter) {
             this.refreshChapterLessons(chapter)
             this.currentChapter = chapter
+            this.currentLesson = null
+            this.currentStep = null
+            this.currentSource = null
+            this.runOnce = false
         },
         selectLesson(lesson) {
             this.refreshLessonSteps(lesson)
             this.currentLesson = lesson
+            this.currentStep = null
+            this.currentSource = null
+            this.runOnce = false
         },
         selectStep(step) {
             this.refreshStepSources(step)
             this.currentStep = step
+            this.currentSource = null
+            this.runOnce = false
         },
         selectSource(source) {
             this.currentSource = source
@@ -319,5 +381,36 @@ export default {
     position: relative;
     display: flex;
     flex: 1;
+}
+
+.workspace-header, .workspace-footer {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.workspace-content {
+    display: flex;
+    flex: 1;
+}
+
+.step-control {
+    display: flex;
+    flex: 1;
+    justify-content: flex-end;
+    padding: 0px 6em;
+    max-height: 0em;
+    overflow: hidden;
+    transition: all .5s ease;
+}
+
+.step-control.is-active {
+    padding: 0px 6em;
+    max-height: 2em;
+}
+
+.step-control-button {
+    overflow: hidden;
+    padding-left: 1em;
+    padding-right: 1em;
 }
 </style>
