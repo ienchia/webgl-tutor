@@ -30,27 +30,29 @@
         <main class="content">
             <tab-set active-index="0">
                 <tab header="Descriptions">
-                    <div class="cols" v-if="selectedChapter || selectedLesson">
-                        <div class="col"
-                            v-if="selectedChapter">
-                            <chapter-editor
-                                :chapter="selectedChapter"
-                                @save="updateChapter">
-                            </chapter-editor>
+                    <div class="rows">
+                        <div class="cols" v-if="selectedChapter || selectedLesson">
+                            <div class="col"
+                                v-if="selectedChapter">
+                                <chapter-editor
+                                    :chapter="selectedChapter"
+                                    @save="updateChapter">
+                                </chapter-editor>
+                            </div>
+                            <div class="col"
+                                v-if="selectedLesson">
+                                <lesson-editor
+                                    :lesson="selectedLesson"
+                                    @save-lesson="updateLesson">
+                                </lesson-editor>
+                            </div>
                         </div>
-                        <div class="col"
-                            v-if="selectedLesson">
-                            <lesson-editor
-                                :lesson="selectedLesson"
-                                @save-lesson="updateLesson">
-                            </lesson-editor>
+                        <div class="cols" v-if="selectedStep">
+                            <step-editor
+                                :step="selectedStep"
+                                @save-step="updateStep">
+                            </step-editor>
                         </div>
-                    </div>
-                    <div class="cols" v-if="selectedStep">
-                        <step-editor
-                            :step="selectedStep"
-                            @save-step="updateStep">
-                        </step-editor>
                     </div>
                 </tab>
                 <tab header="Lesson Requirements">

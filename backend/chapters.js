@@ -13,18 +13,16 @@ module.exports = {
     *create() {
         const chapter = parseRequest(this.request)
         this.body = yield db.Chapter.create(chapter)
-        this.statusCode = 200
     },
     *createLesson(chapterId) {
         const chapter = yield db.Chapter.findById(chapterId)
-        const lesson = {
+        const lesson = yield db.Lesson.create({
             order: 0,
             title: 'No Title',
             description: null
-        }
-        this.body = yield db.Lesson.create(lesson)
-        yield chapter.addLesson(this.body)
-        this.statusCode = 200
+        })
+        yield chapter.addLesson(lesson)
+        this.body = lesson.get()
     },
     *show(id) {
         const chapter = yield db.Chapter.findById(id)

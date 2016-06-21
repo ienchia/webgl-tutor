@@ -11,13 +11,12 @@ function parseRequest(request) {
 module.exports = {
     *createStep(id) {
         const lesson = yield db.Lesson.findById(id)
-        const step = {
+        const step = yield db.Step.create({
             title: 'No Title',
             order: 0
-        }
-        this.body = yield db.Step.create(step)
-        yield lesson.addStep(this.body)
-        this.statusCode = 200
+        })
+        yield lesson.addStep(step)
+        this.body = step.get()
     },
     *list() {
         const lessons = yield db.Lesson.findAll()
@@ -42,11 +41,10 @@ module.exports = {
         console.log(this.body)
         oldLesson.update(newLesson)
         this.body = oldLesson.get()
-        this.statusCode = 200
     },
     *delete(id) {
         const lesson = yield db.Lesson.findById(id)
         lesson.destroy()
-        this.statusCode = 200
+        this.status = 200
     }
 }

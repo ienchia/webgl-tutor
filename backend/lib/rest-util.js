@@ -4,8 +4,7 @@ module.exports = {
             const methodString = allowedMethods.join(',')
             this.append('Access-Control-Allow-Methods', methodString)
             this.append('Allow', methodString)
-            this.statusCode = 200
-            this.body = 'OK'
+            this.status = 200
         }
     }
 }

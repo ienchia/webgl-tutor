@@ -40,8 +40,6 @@ module.exports = {
         }
         yield lesson.setCpdHeaders(cpdHeaders)
         this.body = lesson
-        this.statusCode = 200
-        this.message = 'ok'
     },
     *list() {
         const cpdHeaders = yield db.CpdHeader.findAll()

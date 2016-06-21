@@ -10,8 +10,6 @@ module.exports = {
         yield user.addLessonHistories(lessonHistory)
 
         this.body = lessonHistory
-        this.statusCode = 200
-        this.message = "OK"
     },
     *list(userId) {
         const user = yield db.User.findById(userId)

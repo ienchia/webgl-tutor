@@ -44,22 +44,22 @@ app.use(route.options(
     restUtil
     .createOptionsResponse(['GET'])
 ))
-app.use(route.post(
-    '/chapters',
-    chapters.create
-))
 app.use(route.get(
     '/chapters/:id',
     chapters.show
 ))
-app.use(route.options(
-    '/chapters/:id',
-    restUtil
-    .createOptionsResponse(['GET', 'POST'])
+app.use(route.post(
+    '/chapters',
+    chapters.create
 ))
 app.use(route.put(
     '/chapters/:id',
     chapters.update
+))
+app.use(route.options(
+    '/chapters/:id',
+    restUtil
+    .createOptionsResponse(['GET', 'POST', 'PUT'])
 ))
 app.use(route.get(
     '/chapters/:id/lessons',
