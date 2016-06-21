@@ -65,6 +65,7 @@ export default {
     margin: 1em;
     display: flex;
     flex-direction: column;
+    flex: 0 0 auto;
     width: 120px;
     height: 120px;
     border: thin solid lightsteelblue;

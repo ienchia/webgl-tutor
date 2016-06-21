@@ -22,11 +22,13 @@
                             :class="{ 'is-active': selectedLesson == lesson }"
                             v-for="lesson in selectedChapter.lessons">
                             <div class="lesson-header"
-                                :class="{ 'is-active': selectedLesson == lesson }"
+                                :class="{ 'is-active': selectedLesson == lesson, 'is-easy': lesson.difficulty >= .7, 'is-hard': lesson.difficulty < .7 }"
                                 @click="selectLesson(lesson)">
                                 <span class="fa fa-spin fa-pulse fa-spinner" v-if="lesson.isDetermining"></span>
                                 <span class="fa fa-check-circle" v-if="lesson.lessonHistory"></span>
                                 Lesson {{ $index }}: {{ lesson.title }}
+                                <span v-if="lesson.difficulty != null">({{ lesson.difficulty >= .7 ? 'Easy' : 'Hard' }})</span>
+                                <span class="load ellipsis-loader" v-if="lesson.isCalculatingDifficulty"></span>
                             </div>
                             <div class="lesson-content"
                                 v-if="selectedLesson == lesson && selectedStep == null">
@@ -168,6 +170,14 @@ export default {
     cursor: pointer;
 }
 
+.lesson-header.is-easy {
+    background-color: lightgreen;
+}
+
+.lesson-header.is-hard {
+    background-color: lightsalmon;
+}
+
 .lesson-header:hover {
     background: whitesmoke;
 }
@@ -185,5 +195,33 @@ export default {
 
 .step-content {
     flex: 1;
+}
+
+@keyframes loading-ellipsis {
+    0% {
+        content: '(...)'
+    }
+    33% {
+        content: '(.  )'
+    }
+    66% {
+        content: '(.. )'
+    }
+    100% {
+        content: '(...)'
+    }
+}
+
+.ellipsis-loader {
+    display: inline-block;
+    min-width: 13px;
+}
+
+.ellipsis-loader::before {
+    content: '(...)'
+}
+
+.load.ellipsis-loader::before {
+    animation: 1s loading-ellipsis infinite;
 }
 </style>

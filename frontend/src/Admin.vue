@@ -1,5 +1,9 @@
 <template>
-    <header class="main-header">This is a header</header>
+    <header class="main-header">
+        <div class="brand">
+            WebGL Tutor <i>Admin</i>
+        </div>
+    </header>
     <div class="rows">
         <aside class="primary-sidebar">
             <curriculum-editor
@@ -23,7 +27,7 @@
                 <button type="button" @click="test">Test</button>
             </div>
         </aside>
-        <main class="content rows">
+        <main class="content">
             <tab-set active-index="0">
                 <tab header="Descriptions">
                     <div class="cols" v-if="selectedChapter || selectedLesson">
@@ -48,6 +52,9 @@
                             @save-step="updateStep">
                         </step-editor>
                     </div>
+                </tab>
+                <tab header="Lesson Requirements">
+                    <cpd-editor :lessons="allLessons" @save-cpd="saveCpd"></cpd-editor>
                 </tab>
                 <tab header="Sources" v-if="selectedStep">
                     <div class="col">
@@ -84,6 +91,7 @@ import request from 'superagent'
 import Vue from 'vue'
 
 import ChapterEditor from './components/ChapterEditor.vue'
+import CpdEditor from './components/CpdEditor.vue'
 import CurriculumEditor from './components/CurriculumEditor.vue'
 import LessonEditor from './components/LessonEditor.vue'
 import MarkdownEditor from './components/MarkdownEditor.vue'
@@ -96,6 +104,7 @@ import UserGrid from './components/UserGrid.vue'
 
 export default {
     components: {
+        CpdEditor,
         ChapterEditor,
         CurriculumEditor,
         LessonEditor,
@@ -109,6 +118,7 @@ export default {
     },
     data: function () {
         return {
+            allLessons: null,
             chapter: null,
             chapterTitle: null,
             chapters: null,
@@ -195,6 +205,19 @@ export default {
                 }
             })
         },
+        refreshAllLessons() {
+            request
+            .get(`http://${process.env.API_URL}/lessons`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.allLessons
+                    = res.body.map (lesson => {
+                        lesson.cpd = null
+                        return lesson
+                    })
+                }
+            })
+        },
         refreshChapters() {
             console.log('retrieving chapters')
             this.selectedChapter = null
@@ -243,6 +266,22 @@ export default {
                 }
             })
         },
+        saveCpd(lesson) {
+            console.log(lesson.cpd)
+            request
+            .put(`http://${process.env.API_URL}/lessons/${lesson.id}/cpds`)
+            .send(lesson.cpd.map(cpd => {
+                return {
+                    rules: cpd.rules,
+                    probability: cpd.probability
+                }
+            }))
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    console.log(res.body)
+                }
+            })
+        },
         selectChapter(chapter) {
             this.selectedChapter = null
             this.selectedLesson = null
@@ -250,6 +289,7 @@ export default {
             this.$nextTick(() => {
                 this.selectedChapter = chapter
                 this.refreshChapterLessons(chapter)
+                this.refreshAllLessons()
             })
         },
         selectLesson(lesson) {
@@ -315,11 +355,17 @@ export default {
     },
     ready: function () {
         this.refreshChapters()
+        this.refreshAllLessons()
     }
 }
 </script>
 
 <style media="screen">
+.brand {
+    font-weight: lighter;
+    font-size: 1.2em;
+}
+
 .fixed {
     flex: 0 0 auto;
 }
@@ -369,7 +415,7 @@ export default {
 
 .primary-sidebar, .secondary-sidebar {
     flex: 0 0 auto;
-    width: 20%;
+    width: 25%;
     overflow-x: auto;
 }
 
@@ -378,7 +424,10 @@ export default {
 }
 
 .content {
+    display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
+    width: 70%;
 }
 
 

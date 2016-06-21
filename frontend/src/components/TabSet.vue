@@ -65,8 +65,9 @@ export default {
 }
 
 .tabs-content {
-    flex: 1;
     display: flex;
+    flex-direction: column;
+    flex: 1;
     background: white;
 }
 </style>

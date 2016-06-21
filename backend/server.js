@@ -12,6 +12,7 @@ const restUtil = require('./lib/rest-util')
 const fileUtil = require('./lib/file-util.js')
 
 const chapters = require('./chapters.js')
+const cpds = require('./cpds.js')
 const db = require('./sequelize')
 const login = require('./login')
 const lessonHistories = require('./lesson-histories')
@@ -30,7 +31,6 @@ app.use(function* (next) {
     this.append('Access-Control-Allow-Headers', 'Content-Type')
     yield next
 })
-
 
 /**
 *  Chapters
@@ -84,6 +84,13 @@ app.use(route.options(
     .createOptionsResponse(['GET', 'POST'])
 ))
 /**
+* CPDs
+*/
+app.use(route.get(
+    '/cpds',
+    cpds.list
+))
+/**
 *  Lessons
 **/
 //app.use(auth())
@@ -128,6 +135,15 @@ app.use(route.options(
     restUtil
     .createOptionsResponse(['GET', 'POST'])
 
+))
+app.use(route.put(
+    '/lessons/:lessonId/cpds',
+    cpds.forceUpdate
+))
+app.use(route.options(
+    '/lessons/:id/cpds',
+    restUtil
+    .createOptionsResponse(['PUT'])
 ))
 /**
 *  Logins

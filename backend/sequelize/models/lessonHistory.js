@@ -5,7 +5,7 @@ module.exports = function (sequelize, DataTypes){
     }, {
         classMethods: {
             associate(models) {
-                LessonHistory.hasOne(models.Lesson)
+                LessonHistory.belongsTo(models.Lesson)
             }
         }
     })

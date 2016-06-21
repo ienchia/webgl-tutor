@@ -16,9 +16,13 @@ module.exports = {
     *list(userId) {
         const user = yield db.User.findById(userId)
         const lessonHistories = yield user.getLessonHistories()
-
-        this.body = lessonHistories.map(
-            lessonHistory => lessonHistory.get()
+        var knownLessons = []
+        for (var i = 0; i < lessonHistories.length; i++) {
+            const lesson = yield lessonHistories[i].getLesson()
+            knownLessons.push(lesson)
+        }
+        this.body = knownLessons.map(
+            lesson => lesson.get()
         )
     }
 }

@@ -78,6 +78,7 @@ import request from 'superagent'
 import LoginNavigation from './components/LoginNavigation.vue'
 import LessonNavigation from './components/LessonNavigation.vue'
 import SourceEditor from './directives/SourceEditor.js'
+import BayesNet from './lib/bayesian-network.js'
 
 export default {
     components: {
@@ -89,6 +90,7 @@ export default {
     },
     data: function () {
         return {
+            bn: null,
             chapters: [],
             currentChapter: null,
             currentLesson: null,
@@ -98,6 +100,7 @@ export default {
             isLoggingIn: false,
             isRegistering: false,
             isRegisterSuccess: false,
+            lessonHistory: [],
             loginCredential: {
                 username: null,
                 password: null
@@ -123,6 +126,29 @@ export default {
                     const step = lesson.steps[0] || null
                     this.refreshStepSources(step)
                     this.currentStep = step
+                }
+            })
+        },
+        createBayesNet() {
+            request
+            .get(`http://${process.env.API_URL}/cpds`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    const dataSet = ramda.map(
+                        item => ({
+                            name: ramda.prop('lessonId', item),
+                            parents: ramda.map(
+                                parent => ({
+                                    name: ramda.prop('lessonId', parent),
+                                    state: ramda.prop('state', parent)
+                                }),
+                                ramda.prop('rules', item)
+                            ),
+                            probability: ramda.prop('probability', item)
+                        }),
+                        res.body
+                    )
+                    this.bn = BayesNet(dataSet)
                 }
             })
         },
@@ -174,7 +200,7 @@ export default {
             .send({ lessonId: this.currentLesson.id })
             .end((err, res) => {
                 if (!err && res.ok) {
-                    console.log(res.body)
+                    this.refreshLessonHistories()
                     this.selectChapter(this.currentChapter)
                 }
             })
@@ -189,6 +215,8 @@ export default {
                 .end((err, res) => {
                     if (!err && res.ok) {
                         this.session = res.body
+                        this.refreshChapters()
+                        this.refreshLessonHistories()
                     }
                     this.isLoggingIn = false
                 })
@@ -217,33 +245,98 @@ export default {
             }
             this.selectStep(steps[i + 1])
         },
+        refreshChapters() {
+            this.currentChapter = null
+            request
+            .get(`http://${process.env.API_URL}/chapters`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.chapters = res.body.map(
+                        d => {
+                            d.lessons = null
+                            return d
+                        }
+                    )
+                }
+            })
+        },
         refreshChapterLessons(chapter) {
             this.currentLesson = null
             request
             .get(`http://${process.env.API_URL}/chapters/${chapter.id}/lessons`)
             .end((err, res) => {
                 if (!err && res.ok) {
-                    chapter.lessons = res.body.map(
+                    this.currentChapter.lessons = ramda.map(
                         lesson => {
                             lesson.isDetermining = true
                             lesson.lessonHistory = null
                             lesson.steps = null
+                            lesson.difficulty = null
+                            lesson.isCalculatingDifficulty = false
                             return lesson
-                        }
+                        },
+                        res.body
                     )
+
+                    this.refreshLessonDifficulties()
+
                     setTimeout(() => {
                         request
                         .get(`http://${process.env.API_URL}/users/${this.session.userId}/lesson-histories`)
                         .end((err, res) => {
                             if (!err && res.ok) {
+                                const knownLessons = res.body
                                 this.currentChapter.lessons.map(lesson => {
                                     lesson.isDetermining = false
-                                    lesson.lessonHistory = ramda.find(ramda.propEq('id', lesson.LessonHistoryId), res.body)
+                                    lesson.lessonHistory = ramda.find(
+                                        ramda.propEq('id', lesson.id),
+                                        knownLessons
+                                    )
                                     return lesson
                                 })
                             }
                         })
                     }, 900)
+                }
+            })
+        },
+        refreshLessonDifficulties() {
+            const knownLessons = ramda.map(
+                lesson => ({
+                    name: ramda.prop('id', lesson),
+                    state: true
+                }),
+                this.lessonHistories || []
+            )
+            this.currentChapter.lessons.forEach(
+                lesson => {
+                    lesson.isCalculatingDifficulty = true
+                    if (this.bn) {
+                        setTimeout(() => {
+                            new Promise((res, rej) => {
+                                const difficulty = this.bn.infer(
+                                    { name: lesson.id, state: true },
+                                    knownLessons
+                                )
+                                res(difficulty)
+                            }).then(difficulty => {
+                                lesson.difficulty = difficulty
+                                lesson.isCalculatingDifficulty = false
+                            })
+                        }, 2000)
+                    }
+                }
+            )
+        },
+        refreshLessonHistories() {
+            request
+            .get(`http://${process.env.API_URL}/users/${this.session.userId}/lesson-histories`)
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.lessonHistories = res.body
+                    if (this.currentChapter && this.currentChapter.lessons) {
+                        this.refreshLessonDifficulties()
+                    }
                 }
             })
         },
@@ -325,18 +418,7 @@ export default {
         }
     },
     ready: function () {
-        request
-        .get(`http://${process.env.API_URL}/chapters`)
-        .end((err, res) => {
-            if (!err && res.ok) {
-                this.chapters = res.body.map(
-                    d => {
-                        d.lessons = null
-                        return d
-                    }
-                )
-            }
-        })
+        this.createBayesNet()
     }
 }
 </script>
@@ -347,11 +429,15 @@ export default {
     flex: 0 0 auto;
     align-items: center;
     padding: 1em;
+    background-color: royalblue;
+    color: white;
     transition: all 1s ease;
 }
 
 #app-header.l-fill {
     flex: 1 1 auto;
+    background-color: whitesmoke;
+    color: black;
 }
 
 #app-content {
