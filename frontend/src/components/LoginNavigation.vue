@@ -2,6 +2,7 @@
     <nav class="login-navigation">
         <div class="login-control controls" v-show="!isLoggedIn">
             <form id="login-form">
+                <h3>Login</h3>
                 <label>Username</label>
                 <input class="control-item" type="text" placeholder="username" v-model="loginCredential.username" />
                 <label>Password</label>
@@ -19,6 +20,7 @@
                 Or
             </div>
             <form id="register-form">
+                <h3>Register</h3>
                 <label>Full name</label>
                 <input class="control-item" type="text" placeholder="Firstname Lastname" v-model="registerCredential.fullname" />
                 <label>Username</label>
@@ -51,10 +53,11 @@
                 <span class="fa fa-user"></span> {{ username }}
             </div>
             <ul class="dropdown-list">
+                <li class="dropdown-item" v-if="username == 'admin'">
+                    <a class="dropdown-item-link" href="admin">Admin</a>
+                </li>
                 <li class="dropdown-item">
-                    <button type="button">
-                        <a href="http://google.com">Feedback</a>
-                    </button>
+                    <a class="dropdown-item-link" href="http://google.com">Feedback</a>
                 </li>
                 <li class="dropdown-item">
                     <button v-on:click="logout">Logout</button>
@@ -150,7 +153,7 @@ export default {
     overflow: hidden;
     padding: 0;
     max-height: 0em;
-    transition: all .3s ease;
+    transition: all .3s cubic-bezier(0.680, 0.010, 0.090, 0.900);
 }
 
 .dropdown-item:hover {
@@ -160,6 +163,10 @@ export default {
 .dropdown:hover .dropdown-item {
     padding: .5em;
     max-height: 4em;
+}
+
+.dropdown-item-link {
+
 }
 
 .login-control {

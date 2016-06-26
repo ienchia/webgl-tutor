@@ -14,7 +14,7 @@
                     :class="{ 'is-active': selectedChapter == chapter }"
                     v-if="selectedChapter == chapter">
                     <div class="chapter-description"
-                        v-if="selectedChapter == chapter && selectedLesson == null"
+                        v-if="selectedChapter == chapter && chapter.description && selectedLesson == null"
                         v-html="chapter.description || '' | marked">
                     </div>
                     <ul class="lesson-list">
@@ -32,14 +32,14 @@
                             </div>
                             <div class="lesson-content"
                                 v-if="selectedLesson == lesson && selectedStep == null">
-                                <div v-html="lesson.description || '' | marked"></div>
+                                <div class="lesson-description" v-html="lesson.description || '' | marked"></div>
                                 <button @click="beginLesson(lesson)">Begin Lesson</button>
                             </div>
                             <div class="lesson-content"
                                 v-if="selectedLesson == lesson && selectedStep">
                                 Step {{ selectedStep.order }}:
                                 <div class="step-content">
-                                    {{ selectedStep.description }}
+                                    <div v-html="selectedStep.description || '' | marked"></div>
                                 </div>
                             </div>
                         </li>
@@ -144,6 +144,7 @@ export default {
 
 .chapter-description {
     padding: 1em;
+    flex: 1;
 }
 
 .lesson-list {
@@ -191,6 +192,10 @@ export default {
     flex-direction: column;
     flex: 1;
     padding: .5em;
+}
+
+.lesson-description {
+    flex: 1;
 }
 
 .step-content {

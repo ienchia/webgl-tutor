@@ -23,7 +23,15 @@ function bayesNetwork(set) {
     }
 
 
-
+    function calcProb(fact, knownFacts) {
+        const items = findItemsByName(fact.name)
+        const foundItemByKnownFacts = filterItemListOverKnownFacts(
+            knownFacts,
+            items
+        )
+        const item = R.head(foundItemByKnownFacts)
+        return fact.state == true ? item.probability : 1 - item.probability
+    }
 
     function condProb(condition, over) {
         const items = filterItem(condition.name)
@@ -50,6 +58,36 @@ function bayesNetwork(set) {
             set
         )
     }
+
+    function filterItemListOverKnownFacts(knownFacts, itemList) {
+        const sortedKnownFacts = R.sortBy(
+            R.prop('name'),
+            knownFacts
+        )
+        return R.filter(
+            R.compose(
+                R.equals(
+                    R.__,
+                    sortedKnownFacts
+                ),
+                R.compose(
+                    R.sortBy(
+                        R.prop('name')
+                    ),
+                    R.prop('parents')
+                )
+            ),
+            itemList
+        )
+    }
+
+    function findItemsByName(name) {
+        return R.filter(
+            R.propEq('name', name),
+            set
+        )
+    }
+
 
     function fullJoint(conditions) {
         return multProbs(
@@ -81,6 +119,15 @@ function bayesNetwork(set) {
                 )
             },
             conditions
+        )
+    }
+
+    function getAllItem() {
+        return R.uniq(
+            R.map(
+                R.pick(['name']),
+                set
+            )
         )
     }
 
@@ -116,6 +163,62 @@ function bayesNetwork(set) {
                 )
             )
         )
+    }
+
+    function genFactListSatifiesKnownFacts(knownFacts) {
+        const allItem = getAllItem()
+        const knownItemNames = R.map(
+            R.prop('name'),
+            knownFacts
+        )
+        const allItemExceptKnownItem = R.reject(
+            R.compose(
+                R.contains(
+                    R.__,
+                    knownItemNames
+                ),
+                R.prop('name')
+            ),
+            allItem
+        )
+        const allItemExceptKnownItemStateList = R.map(
+            item => R.map(
+                R.assoc('state', R.__, item),
+                [true, false]
+            ),
+            allItemExceptKnownItem
+        )
+        const allItemExceptKnownItemFactList = R.reduce(
+            (factList, itemStateList) => R.unnest(
+                R.map(
+                    itemState => R.map(
+                        fact => R.append(itemState, fact),
+                        factList
+                    ),
+                    itemStateList
+                )
+            ),
+            [[]],
+            R.reverse(allItemExceptKnownItemStateList)
+        )
+        const allFactList = R.map(
+            R.concat(R.__, knownFacts),
+            allItemExceptKnownItemFactList
+        )
+        const allFactListSorted = R.map(
+            R.sortBy(
+                R.prop('name')
+            ),
+            allFactList
+        )
+        return allFactListSorted
+    }
+
+    function genFullJointListOfFactAndFactKnownFact(facts, knownFacts) {
+        return [
+            genFactListSatifiesKnownFacts(R.concat(facts, knownFacts)),
+            genFactListSatifiesKnownFacts(knownFacts)
+        ]
     }
 
     function infer(condition, knownConditions) {
@@ -167,6 +270,20 @@ function bayesNetwork(set) {
         )
     }
 
+    function inference(facts, knownFacts) {
+        console.log([
+            R.map(
+                calcProb,
+                genFactListSatifiesKnownFacts(R.concat(facts, knownFacts))
+            ),
+            R.map(
+                calcProb,
+                genFactListSatifiesKnownFacts(knownFacts)
+            ),
+        ])
+        return .0
+    }
+
     function multProbs(probabilities) {
         return R.reduce(
             R.multiply,
@@ -180,12 +297,93 @@ function bayesNetwork(set) {
     }
 
 
+    function ask(x, e) {
+        const vars = getAllItem()
+        const result = {
+            a: enuma(vars, R.append(x, e)),
+            b: enuma(vars, R.append(R.assoc('state', !x.state, x), e))
+        }
+        return result.a/(result.a + result.b)
+    }
+
+    function enuma(vars, e) {
+        if (R.length(vars) == 0) {
+            return 1.0
+        }
+        const Y = R.map(
+            state => R.assoc(
+                'state',
+                state,
+                R.head(vars)
+            ),
+            [true, false]
+        )
+        const y = R.head(
+            R.map(
+                y => R.find(
+                    R.propEq('name', R.prop('name', y)),
+                    e
+                ),
+                Y
+            )
+        )
+        if (y) {
+            return R.multiply(
+                calcProb(y, filterConditionsByTargetParents(y, e)),
+                enuma(
+                    R.tail(vars),
+                    e
+                )
+            )
+        }
+        else {
+            return R.sum(
+                R.map(
+                    y => R.multiply(
+                        calcProb(y, filterConditionsByTargetParents(y, e)),
+                        enuma(
+                            R.tail(vars),
+                            R.append(y, e)
+                        )
+                    ),
+                    Y
+                )
+            )
+        }
+    }
+
+    function mMult(a, b) {
+        return {
+            operation: 'multiply',
+            operands: [
+                a,
+                b
+            ]
+        }
+    }
+
+    function mSum(list) {
+        return {
+            operation: 'sum',
+            operands: list
+        }
+    }
+
+
     return {
+        ask,
+        calcProb,
         condProb,
+        filterItemListOverKnownFacts,
+        findItemsByName,
         fullJoint,
+        getAllItem,
         getHidden,
         getParents,
-        infer
+        genFactListSatifiesKnownFacts,
+        genFullJointListOfFactAndFactKnownFact,
+        infer,
+        inference
     }
 }
 

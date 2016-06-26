@@ -3,6 +3,9 @@
         <div class="brand">
             WebGL Tutor <i>Admin</i>
         </div>
+        <div class="header-aside">
+            <a class="header-link" href="/">Back to site</a>
+        </div>
     </header>
     <div class="rows">
         <aside class="primary-sidebar">
@@ -18,14 +21,6 @@
                 @set-active-chapter="selectChapter"
                 @set-active-lesson="selectLesson"
                 @set-active-step="selectStep"></curriculum-editor>
-            <!-- DEBUG -->
-            <div>
-                <pre style="font-size: 8px">
-                    <br />{{ selectedChapter | json }}
-                    <br />{{ selectedStep | json }}
-                </pre>
-                <button type="button" @click="test">Test</button>
-            </div>
         </aside>
         <main class="content">
             <tab-set active-index="0">
@@ -151,17 +146,19 @@ export default {
         },
         addChapter() {
             request
-                .post(`http://${process.env.API_URL}/chapters`)
-                .send({})
-                .end((err, res) => {
-                    if (!err && res.ok) {
-                        this.refreshChapters()
-                    }
-                })
+            .post(`http://${process.env.API_URL}/chapters`)
+            .withCredentials()
+            .send({})
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.refreshChapters()
+                }
+            })
         },
         addLessonToChapter(chapter) {
             request
                 .post(`http://${process.env.API_URL}/chapters/${chapter.id}/lessons`)
+                .withCredentials()
                 .send({})
                 .end((err, res) => {
                     if (!err && res.ok) {
@@ -172,6 +169,7 @@ export default {
         addStepToLesson(lesson) {
             request
             .post(`http://${process.env.API_URL}/lessons/${lesson.id}/steps`)
+            .withCredentials()
             .send({})
             .end((err, res) => {
                 if (!err && res.ok) {
@@ -191,6 +189,7 @@ export default {
                 + `/steps/${stepId}`
                 + `/sources`
             )
+            .withCredentials()
             .send(source)
             .end((err, res) => {
                 if (!err && res.ok) {
@@ -201,6 +200,7 @@ export default {
         deleteSource(source) {
             request
             .delete(`http://${process.env.API_URL}/sources/${source.id}`)
+            .withCredentials()
             .end((err, res) => {
                 if (!err && res.ok) {
                     this.refreshStepSources(this.selectedStep)
@@ -272,6 +272,7 @@ export default {
             console.log(lesson.cpd)
             request
             .put(`http://${process.env.API_URL}/lessons/${lesson.id}/cpds`)
+            .withCredentials()
             .send(lesson.cpd.map(cpd => {
                 return {
                     rules: cpd.rules,
@@ -312,6 +313,7 @@ export default {
         updateChapter(chapter) {
             request
                 .put(`http://${process.env.API_URL}/chapters/${chapter.id}`)
+                .withCredentials()
                 .send(chapter)
                 .end((err, res) => {
                      if (err || !res.ok) {
@@ -326,6 +328,7 @@ export default {
             console.log(lesson)
             request
             .put(`http://${process.env.API_URL}/lessons/${lesson.id}`)
+            .withCredentials()
             .send(lesson)
             .end((err, res) => {
                 if (!err && res.ok) {
@@ -334,7 +337,9 @@ export default {
             })
         },
         updateStep(step) {
-            request.put(`http://${process.env.API_URL}/steps/${step.id}`)
+            request
+            .put(`http://${process.env.API_URL}/steps/${step.id}`)
+            .withCredentials()
             .send(step)
             .end((err, res) => {
                 if (!err && res.ok) {
@@ -347,6 +352,7 @@ export default {
             .put(
                 `http://${process.env.API_URL}/sources/${source.id}`
             )
+            .withCredentials()
             .send(source)
             .end((err, res) => {
                 if (!err && res.ok) {
@@ -366,6 +372,16 @@ export default {
 .brand {
     font-weight: lighter;
     font-size: 1.2em;
+}
+
+.header-aside {
+    flex: 1;
+    text-align: right;
+    margin: auto;
+}
+
+.header-link {
+    color: white;
 }
 
 .fixed {
@@ -404,8 +420,9 @@ export default {
 }
 
 .main-header {
+    display: flex;
     flex: 0 0 auto;
-    padding: 1em 1em 0.5em;
+    padding: .8em;
     color: white;
     background-color: royalblue;
     border-bottom: 2px solid rgba(255, 255, 255, .5);

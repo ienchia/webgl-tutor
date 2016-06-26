@@ -1,3 +1,4 @@
+const cors = require('kcors')
 const fs = require('fs')
 const koa = require('koa')
 const mount = require('koa-mount')
@@ -11,6 +12,7 @@ const auth = require('./middleware/authentication')
 const restUtil = require('./lib/rest-util')
 const fileUtil = require('./lib/file-util.js')
 
+const admin = require('./middleware/authentication.js').admin
 const chapters = require('./chapters.js')
 const cpds = require('./cpds.js')
 const db = require('./sequelize')
@@ -21,16 +23,51 @@ const sources = require('./sources')
 const steps = require('./steps')
 const users = require('./users')
 
+
+
 app = koa()
 app.keys = [ 'im secret, hush' ]
 
-app.use(session(app))
+if (process.env.NODE_ENV == 'development') {
+    app.use(function* (next) {
+        yield next
+        this.append('Access-Control-Allow-Credentials', 'true')
+    })
+    app.use(cors())
+}
+
+app.use(session({maxAge: 6 * 60 * 60 * 1000}, app))
 app.use(parse())
-app.use(function* (next) {
-    this.append('Access-Control-Allow-Origin', '*')
-    this.append('Access-Control-Allow-Headers', 'Content-Type')
-    yield next
-})
+
+app.use(route.get(
+    '/session',
+    function* () {
+        if (this.session.id) {
+            this.session.n = (this.session.n || 0) + 1
+            this.body = this.session
+        }
+        else {
+            this.throw(401)
+        }
+    }
+))
+
+app.use(route.get(
+    '/session/:id',
+    function* (id) {
+        console.log(id)
+        this.session.id = id
+        this.body = this.session
+    }
+))
+
+app.use(route.get(
+    '/logout',
+    function* () {
+        this.session = null
+        this.status = 200
+    }
+))
 
 /**
 *  Chapters
@@ -50,11 +87,11 @@ app.use(route.get(
 ))
 app.use(route.post(
     '/chapters',
-    chapters.create
+    admin(chapters.create)
 ))
 app.use(route.put(
     '/chapters/:id',
-    chapters.update
+    admin(chapters.update)
 ))
 app.use(route.options(
     '/chapters/:id',
@@ -67,7 +104,7 @@ app.use(route.get(
 ))
 app.use(route.post(
     '/chapters/:id/lessons',
-    chapters.createLesson
+    admin(chapters.createLesson)
 ))
 app.use(route.options(
     '/chapters/:id/lessons',
@@ -76,7 +113,7 @@ app.use(route.options(
 ))
 app.use(route.post(
     '/chapters/:chapterId/lessons/:lessonId/steps/:stepId/sources',
-    sources.create
+    admin(sources.create)
 ))
 app.use(route.options(
     '/chapters/:chapterId/lessons/:lessonId/steps/:stepId/sources',
@@ -106,7 +143,7 @@ app.use(route.options(
 ))
 app.use(route.delete(
     '/lessons/:id',
-    lessons.delete
+    admin(lessons.delete)
 ))
 app.use(route.get(
     '/lessons/:id',
@@ -114,7 +151,7 @@ app.use(route.get(
 ))
 app.use(route.put(
     '/lessons/:id',
-    lessons.update
+    admin(lessons.update)
 ))
 app.use(route.options(
     '/lessons/:id',
@@ -128,7 +165,7 @@ app.use(route.get(
 ))
 app.use(route.post(
     '/lessons/:id/steps',
-    lessons.createStep
+    admin(lessons.createStep)
 ))
 app.use(route.options(
     '/lessons/:id/steps',
@@ -138,7 +175,7 @@ app.use(route.options(
 ))
 app.use(route.put(
     '/lessons/:lessonId/cpds',
-    cpds.forceUpdate
+    admin(cpds.forceUpdate)
 ))
 app.use(route.options(
     '/lessons/:id/cpds',
@@ -163,7 +200,7 @@ app.use(route.delete(
 app.use(route.options(
     '/login',
     restUtil
-    .createOptionsResponse(['POST', 'DELETE'])
+    .createOptionsResponse(['GET', 'POST', 'DELETE'])
 ))
 /**
 *  Users
@@ -183,7 +220,7 @@ app.use(route.get(
 ))
 app.use(route.delete(
     '/users/:id',
-    users.delete
+    admin(users.delete)
 ))
 app.use(route.options(
     '/users/:id',
@@ -240,11 +277,11 @@ app.use(route.options(
 ))
 app.use(route.put(
     '/sources/:id',
-    sources.update
+    admin(sources.update)
 ))
 app.use(route.delete(
     '/sources/:id',
-    sources.delete
+    admin(sources.delete)
 ))
 app.use(route.options(
     '/sources/:id',
@@ -256,7 +293,7 @@ app.use(route.options(
 */
 app.use(route.put(
     '/steps/:id',
-    steps.update
+    admin(steps.update)
 ))
 app.use(route.options(
     '/steps/:id',
@@ -269,7 +306,7 @@ app.use(route.get(
 ))
 app.use(route.post(
     '/steps/:id/sources',
-    steps.createSource
+    admin(steps.createSource)
 ))
 app.use(route.options(
     '/steps/:id/sources',
@@ -279,25 +316,6 @@ app.use(route.options(
 /**
 * File systems
 */
-app.use(route.get(
-    '/apple/:dirname/:filename/:content',
-    function* (dirname, filename, content) {
-        const dirPath = path.resolve('sources', dirname)
-        const isPathExist = yield fileUtil
-        .checkDir(dirPath)
-        .catch(function (reason) {
-            return false
-        })
-        if (!isPathExist) {
-            yield fileUtil.createDir(dirPath)
-        }
-        const isCreated = yield fileUtil.createFile(
-            path.resolve(dirPath, filename || 'filename.js'),
-            content
-        )
-        this.body = isCreated ? 'ok' : 'not found'
-    }
-))
 app.use(mount('/files', static('public/files')))
 /**
 * Error handling

@@ -11,10 +11,13 @@ module.exports = {
             })
 
         if (account) {
-            this.session = {
+            console.log('ola')
+            const user = {
                 userId: account.get('id'),
                 username: account.get('username')
             }
+            this.session = user
+            this.status = 202
             this.body = this.session
         }
         else {
@@ -22,7 +25,7 @@ module.exports = {
         }
     },
     *delete() {
-        this.session.username = undefined
+        this.session = null
         this.status = 200
     },
     *get() {

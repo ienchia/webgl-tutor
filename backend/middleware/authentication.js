@@ -1,14 +1,11 @@
-module.exports = function(options) {
-    return function* (next) {
-        options.match
-        && options.match.test(this.request.url)
-        && this.session
-        if (options.match.test(this.request.url)) {
-            if (this.session) {
-
+module.exports = {
+    admin(next) {
+        return function* () {
+            if (this.session.username == 'admin') {
+                yield next.bind(this, ...arguments)
             }
             else {
-                yield next
+                this.throw(401)
             }
         }
     }

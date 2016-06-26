@@ -1,13 +1,14 @@
 <template>
     <div class="curriculum-editor">
-        <ul class="tree-list">
+        <h1>Curriculum</h1>
+        <ul class="tree-list" v-if="chapters">
             <li class="tree-item"
                 v-for="chapter in chapters"
                 :class="{ 'is-active': activeChapter == chapter }">
                 <div class="tree-header expand-tree"
                     :class="{ 'is-active': activeChapter == chapter }"
                     @click="setActiveChapter(chapter)">
-                    {{ chapter.title }}
+                    Chapter {{ chapter.order }}: {{ chapter.title }}
                 </div>
                 <ul class="tree-list cols"
                     v-if="activeChapter == chapter">
@@ -16,16 +17,16 @@
                         <div class="tree-header expand-tree"
                             :class="{ 'is-active': activeLesson == lesson }"
                             @click="setActiveLesson(lesson)">
-                            {{ lesson.title }}
+                            Lesson {{ lesson.order }}: {{ lesson.title }}
                         </div>
                         <ul class="tree-list cols"
                             v-if="activeLesson == lesson">
-                            <li class="tree-item"
+                            <li class="tree-item tree-header"
                                 v-for="step in lesson.steps">
                                 <div class="expand-tree"
                                     :class="{ 'is-active': activeStep == step }"
                                     @click="setActiveStep(step)">
-                                    {{ step.title }}
+                                    Step {{ step.order }}: {{ step.title }}
                                 </div>
                             </li>
                             <button @click="addStep(lesson)">Add New Step</button>
@@ -35,8 +36,14 @@
                 </ul>
             </li>
         </ul>
-        <button @click="addChapter">Add Chapter</button>
-        <button @click="refreshChapters">Refresh</button>
+        <div class="controls">
+            <div class="control-item">
+                <button @click="addChapter">Add Chapter</button>
+            </div>
+            <div class="control-item">
+                <button @click="refreshChapters">Refresh</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -86,14 +93,31 @@ export default {
 </script>
 
 <style media="screen">
-.curriculum-editor {
+.controls {
+    display: flex;
+    flex: 1;
+}
+
+.control-item {
     display: flex;
     flex-direction: column;
     flex: 1;
 }
 
+.curriculum-editor {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0 .5em;
+}
+
 .tree-list {
-    padding: 1em;
+    padding: 0;
+    margin: 0;
+}
+
+.tree-list .tree-list {
+    padding: 0 .5em;
 }
 
 .tree-header {

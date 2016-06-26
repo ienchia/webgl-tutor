@@ -429,6 +429,26 @@ form {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
+    padding: .2em;
+}
+
+form label {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+form input {
+    margin-bottom: 1em;
+    padding: .3em .8em;
+    padding-left: .5em;
+    border: thin solid gray;
+    outline: none;
+}
+
+form input:focus {
+    border-color: royalblue;
+    border-left-width: medium;
+    padding-left: .35em;
 }
 
 label {

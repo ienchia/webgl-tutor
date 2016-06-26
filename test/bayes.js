@@ -183,7 +183,7 @@ describe('Complex Bayesian Network', function () {
     describe('#infer(condition, knownConditions)', function () {
         it('should do calculate the probability of condition happen when knownConditions', function () {
             expect(
-                net.infer(
+                net.ask(
                     { name: 'Rain', state: true },
                     [{ name: 'Grass', state: true }]
                 ).toFixed(4)
@@ -195,7 +195,7 @@ describe('Complex Bayesian Network', function () {
     describe('#infer(condition, knownConditions)', function () {
         it('should Rain to no parents as hidden are all', function () {
             expect(
-                net.infer(
+                net.ask(
                     { name: 'Rain', state: true },
                     []
                 ).toFixed(4)
@@ -207,7 +207,7 @@ describe('Complex Bayesian Network', function () {
     describe('#infer(condition, knownConditions)', function () {
         it('should Sprinkler to low value as all parents are active', function () {
             expect(
-                net.infer(
+                net.ask(
                     { name: 'Sprinkler', state: true },
                     []
                 ).toFixed(4)
@@ -221,14 +221,7 @@ describe('Ad Hoc Bayesian', function () {
     const net = bn([{"name":1,"parents":[],"probability":0.7},{"name":2,"parents":[{"name":1,"state":true}],"probability":0.7},{"name":2,"parents":[{"name":1,"state":false}],"probability":0.7}])
     describe('Sample 1', function () {
         it('should not err', function () {
-            expect(net.infer({ name: 1, state: true }, []))
-            .to.equal(.7)
-        })
-    })
-
-    describe('Sample 2', function () {
-        it('should not return none', function () {
-            expect(net.infer({ name: 1, state: true }, [{name: 1, state: true}]))
+            expect(net.ask({ name: 1, state: true }, []))
             .to.equal(.7)
         })
     })

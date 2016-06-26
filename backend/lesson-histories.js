@@ -16,11 +16,9 @@ module.exports = {
         const lessonHistories = yield user.getLessonHistories()
         var knownLessons = []
         for (var i = 0; i < lessonHistories.length; i++) {
-            const lesson = yield lessonHistories[i].getLesson()
-            knownLessons.push(lesson)
+            var lesson = yield lessonHistories[i].getLesson()
+            knownLessons.push(lesson.get())
         }
-        this.body = knownLessons.map(
-            lesson => lesson.get()
-        )
+        this.body = knownLessons
     }
 }

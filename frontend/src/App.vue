@@ -57,10 +57,16 @@
                 </div>
             </div>
             <div class="workspace-footer">
-                <div class="step-control" :class="{ 'is-active': runOnce }">
-                    Do You want to continue?
-                    <button class="step-control-button" type="button" @click="nextStep" v-if="currentStep">Next Step</button>
-                    <button class="step-control-button" type="button" @click="finishLesson" v-if="currentStep && currentStep == currentLesson.steps[currentLesson.steps.length - 1]">Done</button>
+                <div class="step-control" v-if="currentStep && runOnce" transition="t-expand">
+                    <div class="" v-if="currentStep && currentStep == currentLesson.steps[currentLesson.steps.length - 1]">
+                        Do you understand?
+                        <button class="step-control-button" type="button" @click="finishLesson">Yes</button>
+                        <button class="step-control-button" type="button" @click="selectLesson(currentLesson)">No, Back to start</button>
+                    </div>
+                    <div class="" v-if="currentStep && currentStep != currentLesson.steps[currentLesson.steps.length - 1]">
+                        Do You want to continue?
+                        <button class="step-control-button" type="button" @click="nextStep" v-if="currentStep">Next Step</button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -207,16 +213,17 @@ export default {
         },
         login(credentials) {
             this.isLoggingIn = true
-            console.log(credentials)
             setTimeout(() => {
                 request
                 .post(`http://${process.env.API_URL}/login`)
+                .withCredentials()
                 .send(credentials)
                 .end((err, res) => {
                     if (!err && res.ok) {
                         this.session = res.body
                         this.refreshChapters()
                         this.refreshLessonHistories()
+                        console.log(res)
                     }
                     this.isLoggingIn = false
                 })
@@ -225,6 +232,7 @@ export default {
         logout() {
             request
             .delete(`http://${process.env.API_URL}/login`)
+            .withCredentials()
             .send({})
             .end((err, res) => {
                 if (!err && res.ok) {
@@ -314,12 +322,16 @@ export default {
                     if (this.bn) {
                         setTimeout(() => {
                             new Promise((res, rej) => {
-                                const difficulty = this.bn.infer(
+                                const difficulty = this.bn.ask(
                                     { name: lesson.id, state: true },
-                                    knownLessons
+                                    ramda.reject(
+                                        ramda.equals({ name: lesson.id, state: true }),
+                                        knownLessons
+                                    )
                                 )
                                 res(difficulty)
                             }).then(difficulty => {
+                                console.log(difficulty)
                                 lesson.difficulty = difficulty
                                 lesson.isCalculatingDifficulty = false
                             })
@@ -375,6 +387,7 @@ export default {
             setTimeout(() => {
                 request
                 .post(`http://${process.env.API_URL}/users`)
+                .withCredentials()
                 .send({
                     fullname: user.fullname,
                     password: user.password,
@@ -419,6 +432,15 @@ export default {
     },
     ready: function () {
         this.createBayesNet()
+        request
+        .get(`http://${process.env.API_URL}/login`)
+        .withCredentials()
+        .end((err, res) => {
+            if (!err && res.ok) {
+                this.session = res.body
+                this.refreshChapters()
+            }
+        })
     }
 }
 </script>
@@ -431,6 +453,7 @@ export default {
     padding: 1em;
     background-color: royalblue;
     color: white;
+    border-bottom: 2px solid rgba(255, 255, 255, .5);
     transition: all 1s ease;
 }
 
@@ -559,14 +582,20 @@ export default {
     flex: 1;
 }
 
-.step-control {
+.step-control.t-expand-transition {
+    background: whitesmoke;
     display: flex;
     flex: 1;
     justify-content: flex-end;
-    padding: 0px 6em;
-    max-height: 0em;
+    padding: .4em 6em;
+    max-height: 2em;
     overflow: hidden;
     transition: all .5s ease;
+}
+
+.step-control.t-expand-enter, .step-control.t-expand-leave {
+    padding: 0 6em;
+    max-height: 0;
 }
 
 .step-control.is-active {
