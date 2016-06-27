@@ -318,6 +318,10 @@ app.use(route.options(
 */
 app.use(mount('/files', static('public/files')))
 /**
+* Front end
+**/
+app.use(mount('/', static('public')))
+/**
 * Error handling
 */
 app.use(function* () {

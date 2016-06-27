@@ -76,11 +76,6 @@ module.exports = {
         ]
     },
     plugins: [
-        new webpack.DefinePlugin({
-            'process.env': {
-                API_URL: `"${process.env.API_URL}"`
-            }
-        }),
         new ExtractTextWebpackPlugin('css/[name].css'),
         new HtmlWebpackPlugin({
             filename: 'index.html',
@@ -101,14 +96,25 @@ module.exports = {
     devtool: '#eval-source-map'
 }
 
-if (process.env.NODE_ENV === 'production') {
-    module.exports.devtool = '#source-map'
+if (process.env.NODE_ENV == 'development') {
+    module.exports.plugins = (module.exports.plugins || []).concat([
+        new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: '"development"',
+                API_URL: `"${process.env.API_URL}"`
+            }
+        })
+    ])
+}
+
+if (process.env.NODE_ENV == 'production') {
+    module.exports.devtool = '#eval-source-map'
     // http://vuejs.github.io/vue-loader/workflow/production.html
     module.exports.plugins = (module.exports.plugins || []).concat([
         new webpack.DefinePlugin({
             'process.env': {
                 NODE_ENV: '"production"',
-                API_URL: process.env.API_URL
+                API_URL: `"${process.env.API_URL}"`
             }
         }),
         new webpack.optimize.UglifyJsPlugin({

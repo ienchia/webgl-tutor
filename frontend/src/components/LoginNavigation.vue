@@ -29,8 +29,10 @@
                 <input class="control-item" type="password" placeholder="password" v-model="registerCredential.password" />
                 <label>Confirm Password</label>
                 <input class="control-item" type="password" placeholder="confirm password" v-model="registerCredential.confirmPassword" />
-                <div class="message is-error" v-if="!isConfirmPasswordCorrect">
-                    Confirm password does not match password
+                <div class="message is-error" v-if="validationMessages">
+                    <p v-for="message in validationMessages">
+                        {{ message }}
+                    </p>
                 </div>
                 <div class="message is-error" v-if="registerErrorMessage">
                     {{ registerErrorMessage }}
@@ -38,7 +40,9 @@
                 <div class="message is-success" v-if="isRegisterSuccess">
                     User registered
                 </div>
-                <button type="button" class="is-secondary" @click='register'>
+                <button type="button" class="is-secondary"
+                    @click="register"
+                    :disabled="usernameValidMessage || passwordValidMessage">
                     <div class="" v-if="isRegistering">
                         <span class="fa fa-spin fa-cog"></span> Registering
                     </div>
@@ -70,6 +74,8 @@
 <script type="text/javascript">
 import ramda from 'ramda'
 
+import check from '../../../common/lib/validate.js'
+
 export default {
     computed: {
         username() {
@@ -78,8 +84,37 @@ export default {
         isLoggedIn() {
             return this.session ? true : false
         },
-        isConfirmPasswordCorrect() {
-            return this.registerCredential.confirmPassword == null || this.registerCredential.password == this.registerCredential.confirmPassword
+        validationMessages() {
+            const usernameValidMessage
+            = check.username(this.registerCredential.username)
+            const passwordValidMessage
+            = check.password(
+                this.registerCredential.password,
+                this.registerCredential.confirmPassword
+            )
+            const fullnameValidMessage
+            = check.fullname(this.registerCredential.fullname)
+            return [
+                fullnameValidMessage,
+                usernameValidMessage,
+                passwordValidMessage
+            ]
+            .map(
+                error => error.err ? error.message : null
+            )
+            .filter(
+                msg => msg != null
+            )
+        },
+        passwordValidMessage() {
+            const error = check.password(
+                this.registerCredential.password,
+                this.registerCredential.confirmPassword
+            )
+
+            if (error.err) {
+                return error.message
+            }
         }
     },
     data: function () {
@@ -118,7 +153,7 @@ export default {
 <style>
 .login-navigation {
     display: flex;
-    flex: 0 0 auto;
+    flex: 1;
 }
 
 .dropdown {
@@ -129,7 +164,7 @@ export default {
 }
 
 .dropdown-header {
-    margin: auto;
+    margin: auto 0;
 }
 
 .dropdown-list {

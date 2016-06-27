@@ -480,6 +480,18 @@ button.is-secondary:hover, button.is-secondary:focus {
     border-color: yellowgreen;
 }
 
+button:disabled {
+    background: whitesmoke;
+    color: grey;
+    border-color: grey;
+}
+
+button:hover:disabled {
+    background: whitesmoke;
+    color: grey;
+    border-color: grey;
+}
+
 .message {
     margin: 5px 0;
     font-size: .8em;
