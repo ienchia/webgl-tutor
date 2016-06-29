@@ -7,28 +7,33 @@
                 <input class="control-item" type="text" placeholder="username" v-model="loginCredential.username" />
                 <label>Password</label>
                 <input class="control-item" type="password" placeholder="password" v-model="loginCredential.password" />
+                <div class="message is-error" v-if="loginErrorMessage">
+                    <p>
+                        {{ loginErrorMessage }}
+                    </p>
+                </div>
                 <button type="button" class="control-item" v-on:click="login">
                     <div class="" v-if="isLoggingIn">
-                        <span class="fa fa-spin fa-circle-o-notch"></span> Logging In
+                        <span class="fa fa-spin fa-circle-o-notch"></span> Sedang mencoba masuk
                     </div>
                     <div class="" v-else>
-                        Login
+                        Masuk
                     </div>
                 </button>
             </form>
             <div class="separator">
-                Or
+                Atau
             </div>
             <form id="register-form">
-                <h3>Register</h3>
-                <label>Full name</label>
-                <input class="control-item" type="text" placeholder="Firstname Lastname" v-model="registerCredential.fullname" />
-                <label>Username</label>
+                <h3>Daftar baru</h3>
+                <label>Nama lengkap Anda</label>
+                <input class="control-item" type="text" placeholder="Nama Lengkap" v-model="registerCredential.fullname" />
+                <label>Username yang diinginkan</label>
                 <input class="control-item" type="text" placeholder="username" v-model="registerCredential.username" />
                 <label>Password</label>
                 <input class="control-item" type="password" placeholder="password" v-model="registerCredential.password" />
-                <label>Confirm Password</label>
-                <input class="control-item" type="password" placeholder="confirm password" v-model="registerCredential.confirmPassword" />
+                <label>Ulangi Password</label>
+                <input class="control-item" type="password" placeholder="ulangi password" v-model="registerCredential.confirmPassword" />
                 <div class="message is-error" v-if="validationMessages">
                     <p v-for="message in validationMessages">
                         {{ message }}
@@ -38,16 +43,16 @@
                     {{ registerErrorMessage }}
                 </div>
                 <div class="message is-success" v-if="isRegisterSuccess">
-                    User registered
+                    Anda telah terdaftar
                 </div>
                 <button type="button" class="is-secondary"
                     @click="register"
                     :disabled="usernameValidMessage || passwordValidMessage">
                     <div class="" v-if="isRegistering">
-                        <span class="fa fa-spin fa-cog"></span> Registering
+                        <span class="fa fa-spin fa-cog"></span> Sedang mendaftarkan Anda
                     </div>
                     <div class="" v-else>
-                        Register
+                        Daftarkan
                     </div>
                 </button>
             </form>
@@ -120,10 +125,10 @@ export default {
     data: function () {
         return {
             registerCredential: {
-                fullname: null,
-                username: null,
-                password: null,
-                confirmPassword: null
+                fullname: '',
+                username: '',
+                password: '',
+                confirmPassword: ''
             }
         }
     },
@@ -142,6 +147,7 @@ export default {
         'session',
         'isLoggingIn',
         'loginCredential',
+        'loginErrorMessage',
         'isRegistering',
         'isRegisterSuccess',
         'registerErrorMessage'
@@ -207,8 +213,12 @@ export default {
 .login-control {
     display: flex;
     flex: 1;
-    align-items: center;
+    align-items: flex-end;
     min-height: 1.6em;
+}
+
+.login-control.controls {
+    align-items: center;
 }
 
 .login-control-item {

@@ -11,7 +11,6 @@ module.exports = {
             })
 
         if (account) {
-            console.log('ola')
             const user = {
                 userId: account.get('id'),
                 username: account.get('username')
@@ -21,7 +20,7 @@ module.exports = {
             this.body = this.session
         }
         else {
-            this.throw(401)
+            this.status = 404
         }
     },
     *delete() {

@@ -9,6 +9,7 @@
             :is-registering="isRegistering"
             :is-register-success="isRegisterSuccess"
             :login-credential="loginCredential"
+            :login-error-message="loginErrorMessage"
             :register-error-message="registerErrorMessage"
             @login="login"
             @logout="logout"
@@ -52,20 +53,20 @@
                         <div id="viewer-main">
                             <iframe :src="executeUrl" width="320" height="240"></iframe>
                         </div>
-                        <button @click="execute">{{ this.sendingSource ? 'Sending' : 'Run' }}</button>
+                        <button @click="execute">{{ this.sendingSource ? 'Sedang memproses' : 'Lihat hasil' }}</button>
                     </div>
                 </div>
             </div>
             <div class="workspace-footer">
                 <div class="step-control" v-if="currentStep && runOnce" transition="t-expand">
                     <div class="" v-if="currentStep && currentStep == currentLesson.steps[currentLesson.steps.length - 1]">
-                        Do you understand?
-                        <button class="step-control-button" type="button" @click="finishLesson">Yes</button>
-                        <button class="step-control-button" type="button" @click="selectLesson(currentLesson)">No, Back to start</button>
+                        Apakah Anda sudah mengerti?
+                        <button class="step-control-button" type="button" @click="finishLesson">Iya</button>
+                        <button class="step-control-button" type="button" @click="selectLesson(currentLesson)">Tidak, ulangi dari awal</button>
                     </div>
                     <div class="" v-if="currentStep && currentStep != currentLesson.steps[currentLesson.steps.length - 1]">
-                        Do You want to continue?
-                        <button class="step-control-button" type="button" @click="nextStep" v-if="currentStep">Next Step</button>
+                        Apakah Anda ingin lanjut ke Langkah berikutnya?
+                        <button class="step-control-button" type="button" @click="nextStep" v-if="currentStep">Lanjut</button>
                     </div>
                 </div>
             </div>
@@ -111,6 +112,7 @@ export default {
                 username: null,
                 password: null
             },
+            loginErrorMessage: null,
             registerErrorMessage: null,
             runOnce: false,
             sendingSource: false,
@@ -132,6 +134,10 @@ export default {
                     const step = lesson.steps[0] || null
                     this.refreshStepSources(step)
                     this.currentStep = step
+                    this.executeUrl = null
+                    if (step.sources && step.sources.length > 0) {
+                        this.currentSource = step.sources[0]
+                    }
                 }
             })
         },
@@ -164,17 +170,11 @@ export default {
             && this.currentStep.sources
             && this.currentStep.sources.map(source => {
                 return () => {
-                    console.log('sending ' + source.name)
                     return new Promise((resolve, reject) => {
                         request
                         .post(`http://${process.env.API_URL}/users/${this.session.id}/sandbox`)
                         .send({ filename: source.name, content: source.content })
                         .end((err, res) => {
-                            console.log(err)
-                            console.log(res)
-                            !err && res.ok
-                            ? console.log('end ' + source.name)
-                            : console.log(source.name + err)
                             !err && res.ok && resolve()
                         })
                     })
@@ -185,7 +185,6 @@ export default {
             }, Promise.resolve())
             .then(
                 () => {
-                    console.log('view')
                     this.executeUrl = null
                     this.$nextTick(() => {
                         this.executeUrl = `http://${process.env.API_URL}/users/${this.session.id}/sandbox`
@@ -194,7 +193,6 @@ export default {
                     })
                 },
                 err => {
-                    console.log(err)
                     this.sendingSource = false
                 }
             )
@@ -213,6 +211,7 @@ export default {
         },
         login(credentials) {
             this.isLoggingIn = true
+            this.loginErrorMessage = null
             setTimeout(() => {
                 request
                 .post(`http://${process.env.API_URL}/login`)
@@ -223,7 +222,9 @@ export default {
                         this.session = res.body
                         this.refreshChapters()
                         this.refreshLessonHistories()
-                        console.log(res)
+                    }
+                    if (err && res.notFound) {
+                        this.loginErrorMessage = 'User tidak ditemukan. Mungkin username dan password tidak cocok. Apakah Anda pernah mendaftar sebelumnya?'
                     }
                     this.isLoggingIn = false
                 })
@@ -242,6 +243,7 @@ export default {
             this.currentChapter = null
             this.currentLesson = null
             this.currentStep = null
+            this.executeUrl = null
             this.currentSource = null
         },
         nextStep() {
@@ -286,7 +288,7 @@ export default {
                         res.body
                     )
 
-                    this.refreshLessonDifficulties()
+                    this.refreshLessonHistories()
 
                     setTimeout(() => {
                         request
@@ -326,7 +328,7 @@ export default {
                                     { name: lesson.id, state: true },
                                     ramda.reject(
                                         ramda.equals({ name: lesson.id, state: true }),
-                                        knownLessons
+                                        ramda.uniq(knownLessons)
                                     )
                                 )
                                 res(difficulty)
@@ -354,6 +356,7 @@ export default {
         },
         refreshLessonSteps(lesson) {
             this.currentStep = null
+            this.executeUrl = null
             request
             .get(`http://${process.env.API_URL}/lessons/${lesson.id}/steps`)
             .end((err, res) => {
@@ -377,6 +380,10 @@ export default {
                             return source
                         }
                     )
+
+                    if (step.sources.length > 0) {
+                        this.currentSource = step.sources[0]
+                    }
                 }
             })
         },
@@ -395,13 +402,15 @@ export default {
                 })
                 .end((err, res) => {
                     if (!err && res.ok) {
-                        this.isRegistering = false
                         this.isRegisterSuccess = true
                     }
-                    else {
-                        this.isRegistering = false
-                        this.registerErrorMessage = "register failed"
+                    else if (err && res.status == 409) {
+                        this.registerErrorMessage = 'Username telah didaftarkan sebelumnya. Tolong gunakan username lain.'
                     }
+                    else {
+                        this.registerErrorMessage = 'Pendaftaran tidak berhasil'
+                    }
+                    this.isRegistering = false
                 })
             }, 1000)
         },
@@ -410,6 +419,7 @@ export default {
             this.currentChapter = chapter
             this.currentLesson = null
             this.currentStep = null
+            this.executeUrl = null
             this.currentSource = null
             this.runOnce = false
         },
@@ -417,12 +427,14 @@ export default {
             this.refreshLessonSteps(lesson)
             this.currentLesson = lesson
             this.currentStep = null
+            this.executeUrl = null
             this.currentSource = null
             this.runOnce = false
         },
         selectStep(step) {
             this.refreshStepSources(step)
             this.currentStep = step
+            this.executeUrl = null
             this.currentSource = null
             this.runOnce = false
         },
@@ -458,7 +470,8 @@ export default {
 }
 
 #app-header.l-fill {
-    flex: 1 1 auto;
+    flex: 1 1 0%;
+    overflow: hidden;
     background-color: whitesmoke;
     color: black;
 }
@@ -475,13 +488,17 @@ export default {
 
 #app-footer {
     flex: 0;
-    padding: 1em;
+    padding: .5em;
+    background: royalblue;
+    color: white;
+    border-top: 2px solid rgba(255, 255, 255, .5);
 }
 
 #navigation-sidebar {
     display: flex;
     flex: 0 0 auto;
-    width: 240px;
+    border-right: medium solid yellowgreen;
+    width: 360px;
 }
 
 #workspace {
@@ -503,7 +520,7 @@ export default {
     margin: 1em;
     flex-direction: column;
     background-color: white;
-    opacity: .1;
+    opacity: .4;
     transition: all 1s ease;
     z-index: 5;
 }
@@ -586,8 +603,8 @@ export default {
     background: whitesmoke;
     display: flex;
     flex: 1;
-    justify-content: flex-end;
-    padding: .4em 6em;
+    justify-content: center;
+    padding: .5em 0;
     max-height: 2em;
     overflow: hidden;
     transition: all .5s ease;

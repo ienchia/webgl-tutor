@@ -29,9 +29,10 @@ app = koa()
 app.keys = [ 'im secret, hush' ]
 
 if (process.env.NODE_ENV == 'development') {
+    console.log('using cors for development')
     app.use(function* (next) {
         yield next
-        this.append('Access-Control-Allow-Credentials', 'true')
+        this.append('Access-Control-Allow-Credentials', true)
     })
     app.use(cors())
 }
@@ -55,7 +56,6 @@ app.use(route.get(
 app.use(route.get(
     '/session/:id',
     function* (id) {
-        console.log(id)
         this.session.id = id
         this.body = this.session
     }

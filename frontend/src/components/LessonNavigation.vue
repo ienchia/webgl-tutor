@@ -22,22 +22,22 @@
                             :class="{ 'is-active': selectedLesson == lesson }"
                             v-for="lesson in selectedChapter.lessons">
                             <div class="lesson-header"
-                                :class="{ 'is-active': selectedLesson == lesson, 'is-easy': lesson.difficulty >= .7, 'is-hard': lesson.difficulty < .7 }"
+                                :class="{ 'is-active': selectedLesson == lesson, 'is-done': lesson.lessonHistory, 'is-easy': !lesson.lessonHistory && lesson.difficulty >= .7, 'is-hard': lesson.difficulty < .7 }"
                                 @click="selectLesson(lesson)">
                                 <span class="fa fa-spin fa-pulse fa-spinner" v-if="lesson.isDetermining"></span>
                                 <span class="fa fa-check-circle" v-if="lesson.lessonHistory"></span>
                                 Lesson {{ $index }}: {{ lesson.title }}
-                                <span v-if="lesson.difficulty != null">({{ lesson.difficulty >= .7 ? 'Easy' : 'Hard' }})</span>
+                                <span v-if="lesson.difficulty != null">({{ lesson.difficulty >= .7 ? 'Coba saya' : 'Agak susah' }})</span>
                                 <span class="load ellipsis-loader" v-if="lesson.isCalculatingDifficulty"></span>
                             </div>
                             <div class="lesson-content"
                                 v-if="selectedLesson == lesson && selectedStep == null">
                                 <div class="lesson-description" v-html="lesson.description || '' | marked"></div>
-                                <button @click="beginLesson(lesson)">Begin Lesson</button>
+                                <button @click="beginLesson(lesson)">Mulai Lesson</button>
                             </div>
                             <div class="lesson-content"
                                 v-if="selectedLesson == lesson && selectedStep">
-                                Step {{ selectedStep.order }}:
+                                Langkah ke-{{ selectedStep.order }}: {{ selectedStep.title }}
                                 <div class="step-content">
                                     <div v-html="selectedStep.description || '' | marked"></div>
                                 </div>
@@ -172,11 +172,15 @@ export default {
 }
 
 .lesson-header.is-easy {
-    background-color: lightgreen;
+    background: lightgreen;
 }
 
 .lesson-header.is-hard {
-    background-color: lightsalmon;
+    background: lightsalmon;
+}
+
+.lesson-header.is-done {
+    background: paleturquoise;
 }
 
 .lesson-header:hover {

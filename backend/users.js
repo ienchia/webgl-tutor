@@ -12,8 +12,18 @@ module.exports = {
 
         const username = this.request.body.username
         const password = this.request.body.password
-        const user = yield db.User.create({ firstName, lastName, username, password })
-        this.body = user
+        const existingUser = yield db.User.findOne({
+            where: {
+                username: username
+            }
+        })
+        if (existingUser) {
+            this.status = 409
+        }
+        else {
+            const user = yield db.User.create({ firstName, lastName, username, password })
+            this.body = user
+        }
     },
     *delete(id) {
         const user = yield findById(id)

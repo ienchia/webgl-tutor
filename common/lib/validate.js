@@ -15,7 +15,7 @@ function valid() {
 module.exports = {
     fullname(name) {
         if (name == null || name.length < 1) {
-            return error('please enter your Full Name')
+            return error('tolong masukan nama lengkap Anda.')
         }
 
         return valid()
@@ -23,7 +23,7 @@ module.exports = {
 
     username(name) {
         if (/^[a-zA-Z][a-zA-Z0-9]{3,31}$/.test(name) == false) {
-            return error('username must consist of alphabeths and numbers with 4-32 characters and begin with an alphabeth')
+            return error('tolong masukan 4-32 kombinasi angka dan huruf dan dimulai dengan huruf untuk username Anda.')
         }
 
         return valid()
@@ -31,11 +31,11 @@ module.exports = {
 
     password(password, confirmPassword) {
         if (/^[a-zA-Z0-9]{8,32}$/.test(password) == false) {
-            return error('password must contain 8-32 combination of alphabeths and numbers')
+            return error('tolong masukan 8-32 kombinasi huruf dan angka untuk password Anda.')
         }
 
         if (password != confirmPassword) {
-            return error('password does not match with confirm password')
+            return error('tolong pastikan password and ulangi password Anda sama persis.')
         }
 
         return valid()
