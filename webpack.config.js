@@ -117,11 +117,8 @@ if (process.env.NODE_ENV == 'production') {
                 API_URL: `"${process.env.API_URL}"`
             }
         }),
-        new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            }
-        }),
-        new webpack.optimize.OccurenceOrderPlugin()
+        new webpack.optimize.UglifyJsPlugin(),
+        new webpack.optimize.OccurenceOrderPlugin(),
+        new webpack.optimize.DedupePlugin()
     ])
 }

@@ -48,7 +48,11 @@
                     </div>
                     <div class="file-editor" v-source-editor.javascript="currentSource.content"
                         v-if="/\.js$/.test(currentSource.name)">
-                        </div>
+                    </div>
+                    <div class="file-editor"
+                        v-if="/\.vert$/.test(currentSource.name) || /\.frag$/.test(currentSource.name)"
+                        v-source-editor.glsl="currentSource.content">
+                    </div>
                     <div id="viewer">
                         <div id="viewer-main">
                             <iframe :src="executeUrl" width="320" height="240"></iframe>
@@ -125,11 +129,15 @@ export default {
             .get(`http://${process.env.API_URL}/lessons/${lesson.id}/steps`)
             .end((err, res) => {
                 if (!err && res.ok) {
-                    lesson.steps = res.body.map(
-                        step => {
-                            step.sources = null
-                            return step
-                        }
+                    lesson.steps = ramda.sortBy(
+                        ramda.prop('order'),
+                        ramda.map(
+                            step => {
+                                step.sources = null
+                                return step
+                            },
+                            res.body
+                        )
                     )
                     const step = lesson.steps[0] || null
                     this.refreshStepSources(step)
@@ -361,11 +369,15 @@ export default {
             .get(`http://${process.env.API_URL}/lessons/${lesson.id}/steps`)
             .end((err, res) => {
                 if (!err && res.ok) {
-                    lesson.steps = res.body.map(
-                        step => {
-                            step.sources = null
-                            return step
-                        }
+                    lesson.steps = ramda.sortBy(
+                        ramda.prop('order'),
+                        ramda.map(
+                            step => {
+                                step.sources = null
+                                return step
+                            },
+                            res.body
+                        )
                     )
                 }
             })
@@ -375,10 +387,12 @@ export default {
             .get(`http://${process.env.API_URL}/steps/${step.id}/sources`)
             .end((err, res) => {
                 if (!err && res.ok) {
-                    step.sources = res.body.map(
-                        source => {
-                            return source
-                        }
+                    step.sources = ramda.sortBy(
+                        ramda.prop('order'),
+                        ramda.map(
+                            ramda.identity(),
+                            res.body
+                        )
                     )
 
                     if (step.sources.length > 0) {
@@ -473,7 +487,7 @@ export default {
     flex: 1 1 0%;
     overflow: hidden;
     background-color: whitesmoke;
-    color: black;
+    color: #333;
 }
 
 #app-content {

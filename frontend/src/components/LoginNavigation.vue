@@ -66,7 +66,7 @@
                     <a class="dropdown-item-link" href="admin">Admin</a>
                 </li>
                 <li class="dropdown-item">
-                    <a class="dropdown-item-link" href="http://google.com">Feedback</a>
+                    <a class="dropdown-item-link" href="https://ienchia.typeform.com/to/ZEfiHd">Feedback</a>
                 </li>
                 <li class="dropdown-item">
                     <button v-on:click="logout">Logout</button>

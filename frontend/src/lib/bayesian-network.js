@@ -23,6 +23,15 @@ function bayesNetwork(set) {
     }
 
 
+    function ask(x, e) {
+        const vars = getAllItem()
+        const result = {
+            a: enuma(vars, R.append(x, e)),
+            b: enuma(vars, R.append(R.assoc('state', !x.state, x), e))
+        }
+        return result.a/(result.a + result.b)
+    }
+
     function calcProb(fact, knownFacts) {
         const items = findItemsByName(fact.name)
         const foundItemByKnownFacts = filterItemListOverKnownFacts(
@@ -30,6 +39,7 @@ function bayesNetwork(set) {
             items
         )
         const item = R.head(foundItemByKnownFacts)
+        if (item == undefined) return 1.0
         return fact.state == true ? item.probability : 1 - item.probability
     }
 
@@ -294,16 +304,6 @@ function bayesNetwork(set) {
 
     function sumProbs(probabilities) {
         return R.sum()
-    }
-
-
-    function ask(x, e) {
-        const vars = getAllItem()
-        const result = {
-            a: enuma(vars, R.append(x, e)),
-            b: enuma(vars, R.append(R.assoc('state', !x.state, x), e))
-        }
-        return result.a/(result.a + result.b)
     }
 
     function enuma(vars, e) {

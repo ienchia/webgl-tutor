@@ -3,7 +3,7 @@
         <h1>Curriculum</h1>
         <ul class="tree-list" v-if="chapters">
             <li class="tree-item"
-                v-for="chapter in chapters"
+                v-for="chapter in chapters | orderBy 'order'"
                 :class="{ 'is-active': activeChapter == chapter }">
                 <div class="tree-header expand-tree"
                     :class="{ 'is-active': activeChapter == chapter }"
@@ -13,7 +13,7 @@
                 <ul class="tree-list cols"
                     v-if="activeChapter == chapter">
                     <li class="tree-item"
-                        v-for="lesson in chapter.lessons">
+                        v-for="lesson in chapter.lessons | orderBy 'order'">
                         <div class="tree-header expand-tree"
                             :class="{ 'is-active': activeLesson == lesson }"
                             @click="setActiveLesson(lesson)">
@@ -22,7 +22,7 @@
                         <ul class="tree-list cols"
                             v-if="activeLesson == lesson">
                             <li class="tree-item tree-header"
-                                v-for="step in lesson.steps">
+                                v-for="step in lesson.steps | orderBy 'order'">
                                 <div class="expand-tree"
                                     :class="{ 'is-active': activeStep == step }"
                                     @click="setActiveStep(step)">

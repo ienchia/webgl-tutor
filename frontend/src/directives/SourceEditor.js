@@ -2,6 +2,7 @@ import ace from 'brace'
 import 'brace/mode/html'
 import 'brace/mode/javascript'
 import 'brace/mode/markdown'
+import 'brace/mode/glsl'
 
 export default {
     canSetValue: true,
@@ -16,6 +17,9 @@ export default {
         }
         if (this.modifiers.markdown) {
             this.editor.getSession().setMode('ace/mode/markdown')
+        }
+        if (this.modifiers.glsl) {
+            this.editor.getSession().setMode('ace/mode/glsl')
         }
 
         /* Editor update cannot call editor set value */

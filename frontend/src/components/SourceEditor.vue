@@ -11,6 +11,10 @@
             v-if="/\.js$/.test(source.name)"
             v-source-editor.javascript="source.content">
         </div>
+        <div class="source-editor"
+            v-if="/\.vert$/.test(source.name) || /\.frag$/.test(source.name)"
+            v-source-editor.glsl="source.content">
+        </div>
         <button type="button" @click="saveChanges">Save Changes</button>
     </form>
 </template>

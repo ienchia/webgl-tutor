@@ -3,12 +3,12 @@
         <ul class="accordion-list">
             <li class="accordion-item"
                 :class="{ 'is-active': selectedChapter == chapter }"
-                v-for="chapter in chapters"
+                v-for="chapter in chapters | orderBy 'order'"
                 v-show="selectedChapter == chapter || !selectedStep">
                 <div class="accordion-header"
                     :class="{ 'is-active': selectedChapter == chapter }"
                     @click="selectChapter(chapter)">
-                    Chapter {{ $index + 1 }}: {{ chapter.title }}
+                    Chapter {{ chapter.order }}: {{ chapter.title }}
                 </div>
                 <div class="accordion-content"
                     :class="{ 'is-active': selectedChapter == chapter }"
@@ -20,14 +20,14 @@
                     <ul class="lesson-list">
                         <li class="lesson-item"
                             :class="{ 'is-active': selectedLesson == lesson }"
-                            v-for="lesson in selectedChapter.lessons">
+                            v-for="lesson in selectedChapter.lessons | orderBy 'order'">
                             <div class="lesson-header"
-                                :class="{ 'is-active': selectedLesson == lesson, 'is-done': lesson.lessonHistory, 'is-easy': !lesson.lessonHistory && lesson.difficulty >= .7, 'is-hard': lesson.difficulty < .7 }"
+                                :class="{ 'is-active': selectedLesson == lesson, 'is-done': lesson.lessonHistory, 'is-easy': !lesson.lessonHistory && lesson.difficulty >= .6999, 'is-hard': lesson.difficulty < .6999 }"
                                 @click="selectLesson(lesson)">
                                 <span class="fa fa-spin fa-pulse fa-spinner" v-if="lesson.isDetermining"></span>
                                 <span class="fa fa-check-circle" v-if="lesson.lessonHistory"></span>
-                                Lesson {{ $index }}: {{ lesson.title }}
-                                <span v-if="lesson.difficulty != null">({{ lesson.difficulty >= .7 ? 'Coba saya' : 'Agak susah' }})</span>
+                                Lesson {{ lesson.order }}: {{ lesson.title }}
+                                <span v-if="lesson.difficulty != null">({{ lesson.difficulty >= .6999 ? 'Coba saya' : 'Agak susah' }})</span>
                                 <span class="load ellipsis-loader" v-if="lesson.isCalculatingDifficulty"></span>
                             </div>
                             <div class="lesson-content"
@@ -93,6 +93,7 @@ export default {
 .lesson-navigation {
     display: flex;
     flex: 1;
+    max-width: 100%;
 }
 
 .accordion-list {
@@ -101,6 +102,7 @@ export default {
     flex: 1;
     padding: 0;
     margin: 0;
+    max-width: 100%;
 }
 
 .accordion-item {
@@ -108,6 +110,7 @@ export default {
     flex-direction: column;
     transition: all .3s ease;
     flex: 0 0 auto;
+    max-width: 100%;
 }
 
 .accordion-item.is-active {
