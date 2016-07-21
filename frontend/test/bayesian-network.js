@@ -1,6 +1,184 @@
 const expect = require('chai').expect
-
 const bn = require('../src/lib/bayesian-network.js')
+
+
+describe('Bayesian Network', function() {
+    const net = bn([
+        {
+            name: '1',
+            probability: .7,
+            parents: []
+        },
+        {
+            name: '2',
+            probability: .8,
+            parents: [
+                {
+                    name: '1',
+                    state: true
+                }
+            ]
+        },
+        {
+            name: '2',
+            probability: .6,
+            parents: [
+                {
+                    name: '1',
+                    state: false
+                }
+            ]
+        }
+    ])
+
+    describe('#calcProb({ name: itemName, state: itemState }, [ conditions ])', function () {
+        it('should return probability of item over conditions', function () {
+            expect(
+                net.calcProb(
+                    { name: '2', state: true },
+                    [
+                        { name: '1', state: false }
+                    ]
+                )
+            )
+            .to.equal(
+                .6
+            )
+        })
+    })
+})
+
+describe('Complex Bayesian Network', function () {
+    const net = bn([
+        {
+            name: 'Rain',
+            probability: .2,
+            parents: []
+        },
+        {
+            name: 'Sprinkler',
+            probability: .4,
+            parents: [
+                {
+                    name: 'Rain',
+                    state: false
+                }
+            ]
+        },
+        {
+            name: 'Sprinkler',
+            probability: .01,
+            parents: [
+                {
+                    name: 'Rain',
+                    state: true
+                }
+            ]
+        },
+        {
+            name: 'Grass',
+            probability: .8,
+            parents: [
+                {
+                    name: 'Rain',
+                    state: true
+                },
+                {
+                    name: 'Sprinkler',
+                    state: false
+                }
+            ]
+        },
+        {
+            name: 'Grass',
+            probability: .9,
+            parents: [
+                {
+                    name: 'Rain',
+                    state: false
+                },
+                {
+                    name: 'Sprinkler',
+                    state: true
+                }
+            ]
+        },
+        {
+            name: 'Grass',
+            probability: .99,
+            parents: [
+                {
+                    name: 'Rain',
+                    state: true
+                },
+                {
+                    name: 'Sprinkler',
+                    state: true
+                }
+            ]
+        },
+        {
+            name: 'Grass',
+            probability: 0,
+            parents: [
+                {
+                    name: 'Rain',
+                    state: false
+                },
+                {
+                    name: 'Sprinkler',
+                    state: false
+                }
+            ]
+        }
+    ])
+
+    describe('#ask(condition, knownConditions)', function () {
+        it('should do calculate the probability of condition happen when knownConditions', function () {
+            expect(
+                net.ask(
+                    { name: 'Rain', state: true },
+                    [{ name: 'Grass', state: true }]
+                ).toFixed(4)
+            )
+            .to.equal((.3577).toFixed(4))
+        })
+    })
+
+    describe('#ask(condition, knownConditions)', function () {
+        it('should Rain to no parents as hidden are all', function () {
+            expect(
+                net.ask(
+                    { name: 'Rain', state: true },
+                    []
+                ).toFixed(4)
+            )
+            .to.equal((.2).toFixed(4))
+        })
+    })
+
+    describe('#ask(condition, knownConditions)', function () {
+        it('should Sprinkler to low value as all parents are active', function () {
+            expect(
+                net.ask(
+                    { name: 'Sprinkler', state: true },
+                    []
+                ).toFixed(4)
+            )
+            .to.equal((.322).toFixed(4))
+        })
+    })
+})
+
+describe('Ad Hoc Bayesian', function () {
+    const net = bn([{"name":1,"parents":[],"probability":0.7},{"name":2,"parents":[{"name":1,"state":true}],"probability":0.7},{"name":2,"parents":[{"name":1,"state":false}],"probability":0.7}])
+    describe('Sample 1', function () {
+        it('should not err', function () {
+            expect(net.ask({ name: 1, state: true }, []))
+            .to.equal(.7)
+        })
+    })
+})
 
 describe('Three node example', function () {
     const net = bn([
@@ -230,118 +408,102 @@ describe('Three node example', function () {
             .to.equal(.7)
         })
     })
-    describe('#genFactListSatifiesKnownFacts(knownFacts)', function () {
-        it('should return a list of [possible fact list sorted by name] when some facts are known', function () {
-            expect(net.genFactListSatifiesKnownFacts(
-                [
-                    { name: 1, state: true }
-                ]
-            ))
-            .to.deep.equal(
-                [
-                    [
-                        { name: 1, state: true },
-                        { name: 2, state: true },
-                        { name: 3, state: true }
-                    ],
-                    [
-                        { name: 1, state: true },
-                        { name: 2, state: true },
-                        { name: 3, state: false }
-                    ],
-                    [
-                        { name: 1, state: true },
-                        { name: 2, state: false },
-                        { name: 3, state: true }
-                    ],
-                    [
-                        { name: 1, state: true },
-                        { name: 2, state: false },
-                        { name: 3, state: false }
-                    ]
-                ]
-            )
-
-            expect(net.genFactListSatifiesKnownFacts(
-                [
-                    { name: 1, state: false },
-                    { name: 2, state: true }
-                ]
-            ))
-            .to.deep.equal(
-                [
-                    [
-                        { name: 1, state: false },
-                        { name: 2, state: true },
-                        { name: 3, state: true }
-                    ],
-                    [
-                        { name: 1, state: false },
-                        { name: 2, state: true },
-                        { name: 3, state: false }
-                    ],
-                ]
-            )
-        })
-    })
-    describe('#genFullJointListOfFactAndFactKnownFact(facts, knownFacts)', function () {
-        it('should return list of 2 list for inference', function () {
-            expect(net.genFullJointListOfFactAndFactKnownFact(
-                [{name: 1, state: true}],
-                [{name: 2, state: true}]
-            )).to.deep.equal([
-                [
-
-                    [
-                        {name: 1, state: true},
-                        {name: 2, state: true},
-                        {name: 3, state: true}
-                    ],
-                    [
-                        {name: 1, state: true},
-                        {name: 2, state: true},
-                        {name: 3, state: false}
-                    ]
-                ],
-                [
-
-                    [
-                        {name: 1, state: true},
-                        {name: 2, state: true},
-                        {name: 3, state: true}
-                    ],
-                    [
-                        {name: 1, state: true},
-                        {name: 2, state: true},
-                        {name: 3, state: false}
-                    ],[
-                        {name: 1, state: false},
-                        {name: 2, state: true},
-                        {name: 3, state: true}
-                    ],
-                    [
-                        {name: 1, state: false},
-                        {name: 2, state: true},
-                        {name: 3, state: false}
-                    ]
-                ]
-            ])
-        })
-    })
-    // describe('#inference(facts, knownFacts)', function () {
-    //     it('should return a probability of facts happening when knownFacts are known', function () {
-    //         expect(net.inference(
-    //             [{name: 2, state: true}],
-    //             [{name: 1, state: true}]
-    //         ).toFixed(4)).to.equal((.07181).toFixed(4))
+    // describe('#genFactListSatifiesKnownFacts(knownFacts)', function () {
+    //     it('should return a list of [possible fact list sorted by name] when some facts are known', function () {
+    //         expect(net.genFactListSatifiesKnownFacts(
+    //             [
+    //                 { name: 1, state: true }
+    //             ]
+    //         ))
+    //         .to.deep.equal(
+    //             [
+    //                 [
+    //                     { name: 1, state: true },
+    //                     { name: 2, state: true },
+    //                     { name: 3, state: true }
+    //                 ],
+    //                 [
+    //                     { name: 1, state: true },
+    //                     { name: 2, state: true },
+    //                     { name: 3, state: false }
+    //                 ],
+    //                 [
+    //                     { name: 1, state: true },
+    //                     { name: 2, state: false },
+    //                     { name: 3, state: true }
+    //                 ],
+    //                 [
+    //                     { name: 1, state: true },
+    //                     { name: 2, state: false },
+    //                     { name: 3, state: false }
+    //                 ]
+    //             ]
+    //         )
+    //
+    //         expect(net.genFactListSatifiesKnownFacts(
+    //             [
+    //                 { name: 1, state: false },
+    //                 { name: 2, state: true }
+    //             ]
+    //         ))
+    //         .to.deep.equal(
+    //             [
+    //                 [
+    //                     { name: 1, state: false },
+    //                     { name: 2, state: true },
+    //                     { name: 3, state: true }
+    //                 ],
+    //                 [
+    //                     { name: 1, state: false },
+    //                     { name: 2, state: true },
+    //                     { name: 3, state: false }
+    //                 ],
+    //             ]
+    //         )
     //     })
     // })
-    describe('', function () {
-        it('', function () {
-            expect(net.ask(
-                {name: 2, state: true},
-                [{name: 1, state: true}]
-            )).to.deep.equal(.7)
-        })
-    })
+    // describe('#genFullJointListOfFactAndFactKnownFact(facts, knownFacts)', function () {
+    //     it('should return list of 2 list for inference', function () {
+    //         expect(net.genFullJointListOfFactAndFactKnownFact(
+    //             [{name: 1, state: true}],
+    //             [{name: 2, state: true}]
+    //         )).to.deep.equal([
+    //             [
+    //
+    //                 [
+    //                     {name: 1, state: true},
+    //                     {name: 2, state: true},
+    //                     {name: 3, state: true}
+    //                 ],
+    //                 [
+    //                     {name: 1, state: true},
+    //                     {name: 2, state: true},
+    //                     {name: 3, state: false}
+    //                 ]
+    //             ],
+    //             [
+    //
+    //                 [
+    //                     {name: 1, state: true},
+    //                     {name: 2, state: true},
+    //                     {name: 3, state: true}
+    //                 ],
+    //                 [
+    //                     {name: 1, state: true},
+    //                     {name: 2, state: true},
+    //                     {name: 3, state: false}
+    //                 ],[
+    //                     {name: 1, state: false},
+    //                     {name: 2, state: true},
+    //                     {name: 3, state: true}
+    //                 ],
+    //                 [
+    //                     {name: 1, state: false},
+    //                     {name: 2, state: true},
+    //                     {name: 3, state: false}
+    //                 ]
+    //             ]
+    //         ])
+    //     })
+    // })
 })
