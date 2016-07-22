@@ -24,7 +24,6 @@ const steps = require('./steps')
 const users = require('./users')
 
 
-
 app = koa()
 app.keys = [ 'im secret, hush' ]
 
@@ -313,12 +312,13 @@ app.use(route.options(
     restUtil
     .createOptionsResponse(['GET', 'POST'])
 ))
+
 /**
 * File systems
 */
 app.use(mount('/files', static('public/files')))
 /**
-* Front end
+* Front end static files
 **/
 app.use(mount('/', static('public')))
 /**

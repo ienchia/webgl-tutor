@@ -1,15 +1,15 @@
 {
   "name": "webgl-tutor",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
-    "clean": "rm -rf ./sources",
+    "build": "npm run clean && webpack",
+    "clean": "rm -rf ./public",
     "dev": "webpack-dev-server --inline --hot",
     "server": "nodemon --ignore 'public/* frontend/*' backend/server.js",
     "start": "npm run build && node backend/server.js",
-    "test": "mocha"
+    "test": "mocha frontend/test"
   },
   "author": "",
   "license": "ISC",
