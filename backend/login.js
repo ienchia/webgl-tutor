@@ -16,7 +16,7 @@ module.exports = {
                 username: account.get('username')
             }
             this.session = user
-            this.status = 202
+            this.status = 200
             this.body = this.session
         }
         else {

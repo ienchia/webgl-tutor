@@ -518,6 +518,17 @@ button:hover:disabled {
     border-color: grey;
 }
 
+button.is-danger {
+    color: tomato;
+    border-color: tomato;
+}
+
+button.is-danger:hover, button.is-danger:focus {
+    background: tomato;
+    color: white;
+    border-color: tomato;
+}
+
 .message {
     margin: 5px 0;
     font-size: .8em;

@@ -17,6 +17,8 @@
                 @add-chapter="addChapter"
                 @add-lesson="addLessonToChapter"
                 @add-step="addStepToLesson"
+                @delete-chapter="deleteChapter"
+                @delete-lesson="deleteLesson"
                 @refresh-chapters="refreshChapters"
                 @set-active-chapter="selectChapter"
                 @set-active-lesson="selectLesson"
@@ -71,18 +73,15 @@
                 </tab>
             </tab-set>
         </main>
-        <aside class="secondary-sidebar">
-        </aside>
     </div>
     <footer class="main-footer">
-        <ul class="color-palette">
-            <li class="color-block" v-for="i in [1, 2, 3, 4, 5, 6]">&nbsp;</li>
-        </ul>
+        &copy; 2016
     </footer>
 </template>
 
 <script>
 import css from '../css/style.css'
+import fa from '../css/font-awesome.min.css'
 
 import request from 'superagent'
 import Vue from 'vue'
@@ -194,6 +193,26 @@ export default {
             .end((err, res) => {
                 if (!err && res.ok) {
                     this.refreshStepSources(this.selectedStep)
+                }
+            })
+        },
+        deleteChapter(chapter) {
+            request
+            .delete(`http://${process.env.API_URL}/chapters/${chapter.id}`)
+            .withCredentials()
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.refreshChapters()
+                }
+            })
+        },
+        deleteLesson(lesson) {
+            request
+            .delete(`http://${process.env.API_URL}/lessons/${lesson.id}`)
+            .withCredentials()
+            .end((err, res) => {
+                if (!err && res.ok) {
+                    this.refreshChapterLessons(this.selectedChapter)
                 }
             })
         },
@@ -429,17 +448,18 @@ export default {
 }
 
 .main-footer {
-    flex: 0 0 auto;
+    flex: 0;
+    padding: .5em;
+    background: royalblue;
+    color: white;
+    border-top: 2px solid rgba(255, 255, 255, .5);
 }
 
-.primary-sidebar, .secondary-sidebar {
-    flex: 0 0 auto;
+.primary-sidebar {
+    display: flex;
+    flex: 0 0 320px;
     width: 25%;
     overflow-x: auto;
-}
-
-.secondary-sidebar {
-    width: 0%;
 }
 
 .content {
@@ -447,41 +467,5 @@ export default {
     flex-direction: column;
     flex: 1 1 auto;
     width: 70%;
-}
-
-
-
-
-.color-palette {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex: 1;
-}
-
-.color-block {
-    display: block;
-    flex: 1;
-    text-align: center;
-}
-
-.color-block:nth-child(5n+1) {
-    background: royalblue;
-}
-
-.color-block:nth-child(5n+2) {
-    background: orangered;
-}
-
-.color-block:nth-child(5n+3) {
-    background: gold;
-}
-
-.color-block:nth-child(5n+4) {
-    background: limegreen;
-}
-
-.color-block:nth-child(5n+5) {
-    background: orchid;
 }
 </style>

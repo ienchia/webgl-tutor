@@ -75,6 +75,10 @@ app.use(route.get(
     '/chapters',
     chapters.list
 ))
+app.use(route.post(
+    '/chapters',
+    admin(chapters.create)
+))
 app.use(route.options(
     '/chapters',
     restUtil
@@ -84,18 +88,18 @@ app.use(route.get(
     '/chapters/:id',
     chapters.show
 ))
-app.use(route.post(
-    '/chapters',
-    admin(chapters.create)
-))
 app.use(route.put(
     '/chapters/:id',
     admin(chapters.update)
 ))
+app.use(route.delete(
+    '/chapters/:id',
+    admin(chapters.delete)
+))
 app.use(route.options(
     '/chapters/:id',
     restUtil
-    .createOptionsResponse(['GET', 'POST', 'PUT'])
+    .createOptionsResponse(['GET', 'POST', 'PUT', 'DELETE'])
 ))
 app.use(route.get(
     '/chapters/:id/lessons',
@@ -129,7 +133,6 @@ app.use(route.get(
 /**
 *  Lessons
 **/
-//app.use(auth())
 app.use(route.get(
     '/lessons',
     lessons.list

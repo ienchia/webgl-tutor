@@ -11,6 +11,11 @@ module.exports = {
         yield step.addSource(source)
         this.body = source
     },
+    *delete(id) {
+        const step = yield db.Step.findById(id)
+        yield step.destroy()
+        this.status = 200
+    },
     *listSources(id) {
         const step = yield db.Step.findById(id)
         const sources = yield step.getSources()

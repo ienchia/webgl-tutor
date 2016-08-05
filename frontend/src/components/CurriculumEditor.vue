@@ -9,6 +9,9 @@
                     :class="{ 'is-active': activeChapter == chapter }"
                     @click="setActiveChapter(chapter)">
                     Chapter {{ chapter.order }}: {{ chapter.title }}
+                    <div class="control-delete" @click="confirmDeleteChapter(chapter)" v-if="!activeLesson && activeChapter == chapter">
+                        <button class="is-danger"><i class="fa fa-trash"></i> Delete</button>
+                    </div>
                 </div>
                 <ul class="tree-list cols"
                     v-if="activeChapter == chapter">
@@ -18,6 +21,9 @@
                             :class="{ 'is-active': activeLesson == lesson }"
                             @click="setActiveLesson(lesson)">
                             Lesson {{ lesson.order }}: {{ lesson.title }}
+                            <div class="control-delete" @click="confirmDeleteLesson(lesson)" v-if="activeLesson == lesson">
+                                <button class="is-danger"><i class="fa fa-trash"></i> Delete</button>
+                            </div>
                         </div>
                         <ul class="tree-list cols"
                             v-if="activeLesson == lesson">
@@ -45,6 +51,44 @@
             </div>
         </div>
     </div>
+    <div class="modal" v-if="lessonToConfirmDelete">
+        <div class="modal-content">
+            <div class="modal-header">
+                Are you sure you want to delete?
+            </div>
+            <div class="modal-body">
+                <table class="table-none">
+                    <tbody>
+                        <tr><th>Lesson ID</th><td>{{ lessonToConfirmDelete.id }}</td></tr>
+                        <tr><th>Lesson Title</th><td>{{ lessonToConfirmDelete.title }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-control is-danger" @click="deleteLesson(lessonToConfirmDelete)"><i class="fa fa-trash"></i> yes</button>
+                <button class="modal-control" @click="cancelDeleteLesson"><i class="fa fa-ban"></i> NO</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" v-if="chapterToConfirmDelete">
+        <div class="modal-content">
+            <div class="modal-header">
+                Are you sure you want to delete?
+            </div>
+            <div class="modal-body">
+                <table class="table-none">
+                    <tbody>
+                        <tr><th>Chapter ID</th><td>{{ chapterToConfirmDelete.id }}</td></tr>
+                        <tr><th>Chapter Title</th><td>{{ chapterToConfirmDelete.title }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-control is-danger" @click="deleteChapter(chapterToConfirmDelete)"><i class="fa fa-trash"></i> yes</button>
+                <button class="modal-control" @click="cancelDeleteChapter"><i class="fa fa-ban"></i> NO</button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -55,7 +99,10 @@ export default {
         MarkdownEditor
     },
     data: function () {
-        return { }
+        return {
+            chapterToConfirmDelete: null,
+            lessonToConfirmDelete: null
+        }
     },
     computed: {
         save() {
@@ -73,6 +120,26 @@ export default {
         },
         addStep(lesson) {
             this.$dispatch('add-step', lesson)
+        },
+        cancelDeleteChapter() {
+            this.chapterToConfirmDelete = null
+        },
+        cancelDeleteLesson() {
+            this.lessonToConfirmDelete = null
+        },
+        confirmDeleteChapter(chapter) {
+            this.chapterToConfirmDelete = chapter
+        },
+        confirmDeleteLesson(lesson) {
+            this.lessonToConfirmDelete = lesson
+        },
+        deleteChapter(chapter) {
+            this.$dispatch('delete-chapter', chapter)
+            this.chapterToConfirmDelete = null
+        },
+        deleteLesson(lesson) {
+            this.$dispatch('delete-lesson', lesson)
+            this.lessonToConfirmDelete = null
         },
         refreshChapters() {
             this.$dispatch('refresh-chapters')
@@ -96,12 +163,18 @@ export default {
 .controls {
     display: flex;
     flex: 1;
+    padding: 1em 0;
 }
 
 .control-item {
     display: flex;
     flex-direction: column;
     flex: 1;
+}
+
+.control-delete {
+    display: inline-block;
+    text-align: right;
 }
 
 .curriculum-editor {
@@ -148,4 +221,49 @@ export default {
 .expand-tree.is-active {
     text-decoration: underline;
 }
+
+.modal {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, .5);
+    z-index: 99;
+}
+
+.modal-content {
+    margin: auto;
+    margin-top: 10%;
+    width: 24em;
+    background: white;
+    line-height: 1.5;
+}
+
+.modal-header, .modal-body, .modal-footer {
+    padding: 1em;
+}
+
+.modal-header {
+    font-weight: bold;
+}
+
+.modal-body {
+    height: 10em;
+    overflow: auto;
+}
+
+.modal-footer {
+    text-align: right;
+}
+
+button.modal-control {
+    padding: 0 2em;
+}
+
+.table-none, .table-none th, .table-none td {
+    border: none;
+}
+
+
 </style>

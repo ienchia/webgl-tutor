@@ -24,6 +24,11 @@ module.exports = {
         yield chapter.addLesson(lesson)
         this.body = lesson.get()
     },
+    *delete(id) {
+        const chapter = yield db.Chapter.findById(id)
+        yield chapter.destroy()
+        this.status = 200
+    },
     *show(id) {
         const chapter = yield db.Chapter.findById(id)
         var result = chapter.get()

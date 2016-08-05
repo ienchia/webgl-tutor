@@ -12,6 +12,53 @@ function bayesNetwork(set) {
         return result.a/(result.a + result.b)
     }
 
+    /* Solve query by enumeration */
+    function enuma(vars, e) {
+        if (R.length(vars) == 0) {
+            return 1.0
+        }
+        const Y = R.map(
+            state => R.assoc(
+                'state',
+                state,
+                R.head(vars)
+            ),
+            [true, false]
+        )
+        const y = R.head(
+            R.map(
+                y => R.find(
+                    R.propEq('name', R.prop('name', y)),
+                    e
+                ),
+                Y
+            )
+        )
+        if (y) {
+            return R.multiply(
+                calcProb(y, filterConditionsByTargetParents(y, e)),
+                enuma(
+                    R.tail(vars),
+                    e
+                )
+            )
+        }
+        else {
+            return R.sum(
+                R.map(
+                    y => R.multiply(
+                        calcProb(y, filterConditionsByTargetParents(y, e)),
+                        enuma(
+                            R.tail(vars),
+                            R.append(y, e)
+                        )
+                    ),
+                    Y
+                )
+            )
+        }
+    }
+
     /* Calculate probability of fact over knownFacts */
     function calcProb(fact, knownFacts) {
         const items = findItemsByName(fact.name)
@@ -90,53 +137,6 @@ function bayesNetwork(set) {
             R.head(items) || {}
         )
         return R.map(R.pick(['name']), itemParents || [])
-    }
-
-    /* Solve query by enumeration */
-    function enuma(vars, e) {
-        if (R.length(vars) == 0) {
-            return 1.0
-        }
-        const Y = R.map(
-            state => R.assoc(
-                'state',
-                state,
-                R.head(vars)
-            ),
-            [true, false]
-        )
-        const y = R.head(
-            R.map(
-                y => R.find(
-                    R.propEq('name', R.prop('name', y)),
-                    e
-                ),
-                Y
-            )
-        )
-        if (y) {
-            return R.multiply(
-                calcProb(y, filterConditionsByTargetParents(y, e)),
-                enuma(
-                    R.tail(vars),
-                    e
-                )
-            )
-        }
-        else {
-            return R.sum(
-                R.map(
-                    y => R.multiply(
-                        calcProb(y, filterConditionsByTargetParents(y, e)),
-                        enuma(
-                            R.tail(vars),
-                            R.append(y, e)
-                        )
-                    ),
-                    Y
-                )
-            )
-        }
     }
 
     return {

@@ -207,6 +207,7 @@ export default {
 
 .step-content {
     flex: 1;
+    overflow: auto;
 }
 
 @keyframes loading-ellipsis {
