@@ -1,4 +1,5 @@
 const db = require('./sequelize')
+const pw = require('../common/lib/password')
 
 module.exports = {
     *create() {
@@ -6,7 +7,7 @@ module.exports = {
             .findOne({
                 where: {
                     username: this.request.body.username,
-                    password: this.request.body.password
+                    password: pw.hash(this.request.body.password)
                 }
             })
 

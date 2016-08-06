@@ -1,4 +1,5 @@
 const db = require('./sequelize')
+const pw = require('../common/lib/password')
 
 function findById(id) {
     return db.User.findById(id)
@@ -21,7 +22,7 @@ module.exports = {
             this.status = 409
         }
         else {
-            const user = yield db.User.create({ firstName, lastName, username, password })
+            const user = yield db.User.create({ firstName, lastName, username, password: pw.hash(password) })
             this.body = user
         }
     },
