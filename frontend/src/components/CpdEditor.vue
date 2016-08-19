@@ -178,18 +178,17 @@ export default {
 .cpd-selector, .cpd-editor {
     display: flex;
     flex-direction: column;
+    flex: 1 1 0%;
+    width: 50%;
+    overflow: auto;
+    padding: .5em;
 }
 
 .cpd-selector {
-    flex: 1 1 0%;
-    overflow: auto;
+    border-right: thin solid royalblue;
 }
 
 .cpd-editor {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 auto;
-    width: 50%;
 }
 
 .cpd-section {

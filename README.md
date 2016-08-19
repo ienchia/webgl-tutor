@@ -16,6 +16,58 @@
 
 **API_URL** = *none*
 
+# How To Use
+
+## Requires
+
+* MariaDB Database (enter the connection via the env vars)
+* Docker
+
+## Production
+
+Turn on your MariaDB
+
+Use docker with environment variables configured
+
+```shell
+docker build -t ienchia/webgl .
+docker run ienchia/webgl
+```
+
+### Populate Database
+
+```shell
+export API_URL=<your server ip>
+mocha backend/test
+```
+
+## Development
+
+### Server
+
+Create `development.sh` from `development.sh.example`. Configure the enviroment variables.
+
+Run:
+
+```shell
+source development.sh
+```
+
+# Testing
+
+## Frontend
+
+```shell
+mocha frontend/test
+```
+
+## Backend
+
+```shell
+export API_URL=<your server ip>
+mocha backend/test
+```
+
 # Implementation
 
 ## Pseudocode for Answering Bayesian Network query

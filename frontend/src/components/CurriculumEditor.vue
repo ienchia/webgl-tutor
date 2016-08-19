@@ -13,33 +13,37 @@
                         <button class="is-danger"><i class="fa fa-trash"></i> Delete</button>
                     </div>
                 </div>
-                <ul class="tree-list cols"
-                    v-if="activeChapter == chapter">
-                    <li class="tree-item"
-                        v-for="lesson in chapter.lessons | orderBy 'order'">
-                        <div class="tree-header expand-tree"
-                            :class="{ 'is-active': activeLesson == lesson }"
-                            @click="setActiveLesson(lesson)">
-                            Lesson {{ lesson.order }}: {{ lesson.title }}
-                            <div class="control-delete" @click="confirmDeleteLesson(lesson)" v-if="activeLesson == lesson">
-                                <button class="is-danger"><i class="fa fa-trash"></i> Delete</button>
-                            </div>
-                        </div>
-                        <ul class="tree-list cols"
-                            v-if="activeLesson == lesson">
-                            <li class="tree-item tree-header"
-                                v-for="step in lesson.steps | orderBy 'order'">
-                                <div class="expand-tree"
-                                    :class="{ 'is-active': activeStep == step }"
-                                    @click="setActiveStep(step)">
-                                    Step {{ step.order }}: {{ step.title }}
+                <div class="tree-item-body">
+                    <ul class="tree-list cols"
+                        v-if="activeChapter == chapter">
+                        <li class="tree-item"
+                            v-for="lesson in chapter.lessons | orderBy 'order'">
+                            <div class="tree-header expand-tree"
+                                :class="{ 'is-active': activeLesson == lesson }"
+                                @click="setActiveLesson(lesson)">
+                                Lesson {{ lesson.order }}: {{ lesson.title }}
+                                <div class="control-delete" @click="confirmDeleteLesson(lesson)" v-if="activeLesson == lesson">
+                                    <button class="is-danger"><i class="fa fa-trash"></i> Delete</button>
                                 </div>
-                            </li>
-                            <button @click="addStep(lesson)">Add New Step</button>
-                        </ul>
-                    </li>
-                    <button @click="addLesson(chapter)">Add New Lesson</button>
-                </ul>
+                            </div>
+                            <div class="tree-item-body">
+                                <ul class="tree-list cols"
+                                    v-if="activeLesson == lesson">
+                                    <li class="tree-item tree-header"
+                                        v-for="step in lesson.steps | orderBy 'order'">
+                                        <div class="expand-tree"
+                                            :class="{ 'is-active': activeStep == step }"
+                                            @click="setActiveStep(step)">
+                                            Step {{ step.order }}: {{ step.title }}
+                                        </div>
+                                    </li>
+                                </ul>
+                                <button class="tree-control" @click="addStep(lesson)"v-if="activeLesson == lesson">Add New Step</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <button class="tree-control" @click="addLesson(chapter)" v-if="activeChapter == chapter">Add New Lesson</button>
+                </div>
             </li>
         </ul>
         <div class="controls">
@@ -185,12 +189,9 @@ export default {
 }
 
 .tree-list {
-    padding: 0;
     margin: 0;
-}
-
-.tree-list .tree-list {
-    padding: 0 .5em;
+    padding: 0;
+    border: thin solid royalblue;
 }
 
 .tree-header {
@@ -204,6 +205,14 @@ export default {
 
 .tree-item:last-child {
     margin-bottom: 0;
+}
+
+.tree-item-body {
+    margin: .5em;
+}
+
+.tree-control {
+    width: 100%;
 }
 
 .tree-header:hover {

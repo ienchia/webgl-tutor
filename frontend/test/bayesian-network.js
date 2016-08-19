@@ -48,138 +48,6 @@ describe('Bayesian Network', function() {
     })
 })
 
-describe('Complex Bayesian Network', function () {
-    const net = bn([
-        {
-            name: 'Rain',
-            probability: .2,
-            parents: []
-        },
-        {
-            name: 'Sprinkler',
-            probability: .4,
-            parents: [
-                {
-                    name: 'Rain',
-                    state: false
-                }
-            ]
-        },
-        {
-            name: 'Sprinkler',
-            probability: .01,
-            parents: [
-                {
-                    name: 'Rain',
-                    state: true
-                }
-            ]
-        },
-        {
-            name: 'Grass',
-            probability: .8,
-            parents: [
-                {
-                    name: 'Rain',
-                    state: true
-                },
-                {
-                    name: 'Sprinkler',
-                    state: false
-                }
-            ]
-        },
-        {
-            name: 'Grass',
-            probability: .9,
-            parents: [
-                {
-                    name: 'Rain',
-                    state: false
-                },
-                {
-                    name: 'Sprinkler',
-                    state: true
-                }
-            ]
-        },
-        {
-            name: 'Grass',
-            probability: .99,
-            parents: [
-                {
-                    name: 'Rain',
-                    state: true
-                },
-                {
-                    name: 'Sprinkler',
-                    state: true
-                }
-            ]
-        },
-        {
-            name: 'Grass',
-            probability: 0,
-            parents: [
-                {
-                    name: 'Rain',
-                    state: false
-                },
-                {
-                    name: 'Sprinkler',
-                    state: false
-                }
-            ]
-        }
-    ])
-
-    describe('#ask(condition, knownConditions)', function () {
-        it('should do calculate the probability of condition happen when knownConditions', function () {
-            expect(
-                net.ask(
-                    { name: 'Rain', state: true },
-                    [{ name: 'Grass', state: true }]
-                ).toFixed(4)
-            )
-            .to.equal((.3577).toFixed(4))
-        })
-    })
-
-    describe('#ask(condition, knownConditions)', function () {
-        it('should Rain to no parents as hidden are all', function () {
-            expect(
-                net.ask(
-                    { name: 'Rain', state: true },
-                    []
-                ).toFixed(4)
-            )
-            .to.equal((.2).toFixed(4))
-        })
-    })
-
-    describe('#ask(condition, knownConditions)', function () {
-        it('should Sprinkler to low value as all parents are active', function () {
-            expect(
-                net.ask(
-                    { name: 'Sprinkler', state: true },
-                    []
-                ).toFixed(4)
-            )
-            .to.equal((.322).toFixed(4))
-        })
-    })
-})
-
-describe('Ad Hoc Bayesian', function () {
-    const net = bn([{"name":1,"parents":[],"probability":0.7},{"name":2,"parents":[{"name":1,"state":true}],"probability":0.7},{"name":2,"parents":[{"name":1,"state":false}],"probability":0.7}])
-    describe('Sample 1', function () {
-        it('should not err', function () {
-            expect(net.ask({ name: 1, state: true }, []))
-            .to.equal(.7)
-        })
-    })
-})
-
 describe('Three node example', function () {
     const net = bn([
         {
@@ -662,7 +530,7 @@ describe('HTML JS WebGL Example', function () {
                     state: true
                 }
             ],
-            probability: 0.5
+            probability: 0.7
         },
         {
             name: 2,
@@ -672,7 +540,7 @@ describe('HTML JS WebGL Example', function () {
                     state: false
                 }
             ],
-            probability: 0.3
+            probability: 0.5
         },
         {
             name: 3,
@@ -700,7 +568,7 @@ describe('HTML JS WebGL Example', function () {
                     state: false
                 }
             ],
-            probability: 0.3
+            probability: 0.5
         },
         {
             name: 3,
@@ -714,7 +582,7 @@ describe('HTML JS WebGL Example', function () {
                     state: true
                 }
             ],
-            probability: 0.5
+            probability: 0.3
         },
         {
             name: 3,
@@ -728,13 +596,19 @@ describe('HTML JS WebGL Example', function () {
                     state: false
                 }
             ],
-            probability: 0.2
+            probability: 0.1
         }
     ])
 
+    it('should return 0.7 if 2 and 1 is known', function () {
+        const answer = net.ask({ name: 2, state: true }, [{ name: 1, state: true }])
+        expect(answer.toFixed(1))
+        .to.equal((0.7).toFixed(1))
+    })
+
     it('should return 0.5 if 3 and 1 is known', function () {
         const answer = net.ask({ name: 3, state: true }, [{ name: 1, state: true }])
-        expect(answer.toFixed(1))
-        .to.equal((0.5).toFixed(1))
+        expect(answer.toFixed(2))
+        .to.equal((0.64).toFixed(2))
     })
 })

@@ -457,8 +457,7 @@ export default {
 
 .primary-sidebar {
     display: flex;
-    flex: 0 0 320px;
-    width: 25%;
+    flex: 0 0 380px;
     overflow-x: auto;
 }
 
